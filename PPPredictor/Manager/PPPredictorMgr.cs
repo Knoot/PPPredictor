@@ -23,7 +23,8 @@ namespace PPPredictor.Utilities
     {
         private readonly WebSocketMgr _websocketMgr;
         private const string _beatleaderSyncUrlIdentifier = ".beatleader.";
-        private const string _customDataSyncUrl = "syncURL";
+        private const string _customDataBeatleaderSyncUrl = "syncURL";
+        private const string _customDataBeatLeaderPlaylistId = "id";
         private List<IPPPredictor> _lsPPPredictor;
         private int index = 0;
         private IPPPredictor _currentPPPredictor;
@@ -434,16 +435,38 @@ namespace PPPredictor.Utilities
         {
             if (playlist != null && Plugin.ProfileInfo.IsPredictorSwitchBySyncUrlEnabled)
             {
-                if (playlist.TryGetCustomData(_customDataSyncUrl, out object outSyncURL) && !string.IsNullOrEmpty(outSyncURL as string))
+                if (playlist.TryGetCustomData(_customDataBeatleaderSyncUrl, out object outSyncURL) && !string.IsNullOrEmpty(outSyncURL as string))
                 {
                     string syncUrl = outSyncURL.ToString();
                     foreach (IPPPredictor predictor in _lsPPPredictor)
                     {
                         if (syncUrl.Contains(_beatleaderSyncUrlIdentifier) && predictor.LeaderBoardName == Leaderboard.BeatLeader.ToString())
                         {
-                            index = _lsPPPredictor.FindIndex(x => x.LeaderBoardName == predictor.LeaderBoardName);
-                            CyclePredictors(0);
-                            break;
+                            if(playlist.TryGetCustomData(_customDataBeatLeaderPlaylistId, out object playlistId) && !string.IsNullOrEmpty(playlistId as string))
+                            {
+                                //Switch to event
+                                PPPMapPoolShort beatleaderMapPool = predictor.FindPoolWithPlayListId(playlistId as string);
+                                if (beatleaderMapPool != null)
+                                {
+                                    predictor.CurrentMapPool = beatleaderMapPool;
+                                    index = _lsPPPredictor.FindIndex(x => x.LeaderBoardName == predictor.LeaderBoardName);
+                                    CyclePredictors(0, false);
+                                    _ = RefreshPoolDisplay(500);
+                                    break;
+                                }
+                                else
+                                {
+                                    index = _lsPPPredictor.FindIndex(x => x.LeaderBoardName == predictor.LeaderBoardName);
+                                    CyclePredictors(0);
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                index = _lsPPPredictor.FindIndex(x => x.LeaderBoardName == predictor.LeaderBoardName);
+                                CyclePredictors(0);
+                                break;
+                            }
                         }
                         PPPMapPoolShort mapPool = predictor.FindPoolWithSyncURL(outSyncURL as string);
                         if(mapPool != null)

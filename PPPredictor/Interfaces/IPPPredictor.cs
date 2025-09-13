@@ -25,6 +25,7 @@ namespace PPPredictor.Interfaces
         double? GetPersonalBest();
         void CalculatePP();
         void SetActive(bool setActive, bool hasPoolChanged = false);
+        PPPMapPoolShort FindPoolWithPlayListId(string playListId);
         PPPMapPoolShort FindPoolWithSyncURL(string syncUrl);
         Task GetMapPoolIconData();
         Task UpdateCurrentBeatMapInfos(BeatmapLevel selectedBeatmapLevel, BeatmapKey beatmapKey);
