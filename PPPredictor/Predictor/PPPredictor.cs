@@ -437,6 +437,10 @@ namespace PPPredictor.Utilities
             }
         }
 
+        public PPPMapPoolShort FindPoolWithPlayListId(string playListId)
+        {
+            return calculatorInstance.FindPoolWithPlayListId(leaderboardName, playListId);
+        }
         public PPPMapPoolShort FindPoolWithSyncURL(string syncUrl)
         {
             return calculatorInstance.FindPoolWithSyncURL(leaderboardName, syncUrl);

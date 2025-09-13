@@ -63,6 +63,11 @@ namespace PPPredictor.Utilities
             return;
         }
 
+        public PPPMapPoolShort FindPoolWithPlayListId(string playListId)
+        {
+            return null;
+        }
+
         public PPPMapPoolShort FindPoolWithSyncURL(string syncUrl)
         {
             return new PPPMapPoolShort();
