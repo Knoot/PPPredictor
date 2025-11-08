@@ -33,9 +33,11 @@ namespace PPPredictor.Utilities
         private bool isMapPoolDropDownActive = true;
         private bool isLeaderboardNavigationActive = false;
         private int _loadingCounter = 0;
+        private List<DisplayLoadingStatus> _lsDisplayLoadingStatus = new List<DisplayLoadingStatus>();
 
         public event EventHandler<bool> ViewActivated;
-        public event EventHandler<bool> OnDataLoading;
+        public event EventHandler<bool?> OnDataLoading;
+        public event EventHandler<LoggingMessage> OnLoadingStatusMessage;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         public event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
         public event EventHandler OnMapPoolRefreshed;
@@ -45,11 +47,17 @@ namespace PPPredictor.Utilities
         public bool IsRightArrowActive { get => isRightArrowActive; }
         public bool IsMapPoolDropDownActive { get => isMapPoolDropDownActive; }
         public bool IsLeaderboardNavigationActive { get => isLeaderboardNavigationActive; }
+        public List<object> LsDisplayLoadingStatus { get
+            {
+                return _lsDisplayLoadingStatus.Select(f => (object)f).ToList();
+            } 
+        }
 
         public WebSocketMgr WebsocketMgr { get => _websocketMgr; }
 
         internal static CalculatorInstance CalculatorInstance;
         private SongDetails songDetails { get; set; }
+
         private float _percentage;
 
         internal PPPredictorMgr()
@@ -136,9 +144,23 @@ namespace PPPredictor.Utilities
                 case LoggingMessage.LoggingType.DebugNetworkPrint:
                     Plugin.DebugNetworkPrint(e.message, e.leaderboard);
                     break;
+                case LoggingMessage.LoggingType.LoadingStatus:
+                    HandleLoadingStatusMessage(e);
+                    break;
                 default:
                     return;
             }
+        }
+
+        private void HandleLoadingStatusMessage(LoggingMessage e)
+        {
+            _lsDisplayLoadingStatus.Clear();
+            foreach (var predictor in _lsPPPredictor)
+            {
+                if(predictor.LeaderBoardName == e.leaderboard.ToString()) predictor.LoadingStatus = e.message;
+                _lsDisplayLoadingStatus.Add(new DisplayLoadingStatus(predictor.LeaderBoardIcon, predictor.LoadingStatus));
+            }
+            OnDataLoading?.Invoke(this, null);
         }
 
         private PPPBeatMapInfo ScoreSaberSongCoreLookUp(PPPBeatMapInfo beatMapInfo)

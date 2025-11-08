@@ -97,9 +97,12 @@ namespace PPPredictor.UI.ViewController
             UpdatePPDisplay();
         }
 
-        private void PpPredictorMgr_OnDataLoading(object sender, bool isDataLoading)
+        private void PpPredictorMgr_OnDataLoading(object sender, bool? isDataLoading)
         {
-            this._isDataLoading = isDataLoading;
+            if (isDataLoading.HasValue)
+            {
+                this._isDataLoading = isDataLoading.Value;
+            }
             UpdateLoadingDisplay();
         }
 
@@ -502,6 +505,17 @@ namespace PPPredictor.UI.ViewController
             get => _isScreenMoving ? "🔓" : "🔒";
         }
         #endregion
+
+        #region loading state
+        [UIComponent("listDisplayLoadingState")]
+        public CustomCellListTableData listDisplayLoadingState;
+
+        [UIValue("loadingStateData")]
+        private List<object> LoadingStateData
+        {
+            get => this.ppPredictorMgr.LsDisplayLoadingStatus;
+        }
+        #endregion
         internal void ResetDisplay(bool v)
         {
             ResetPosition();
@@ -663,8 +677,25 @@ namespace PPPredictor.UI.ViewController
         }
         private void UpdateLoadingDisplayInternal()
         {
+            if (_isDataLoading)
+                bsmlParserParams.EmitEvent("show-data-loading-display");
+            else
+                bsmlParserParams.EmitEvent("close-data-loading-display");
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDataLoading)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNoDataLoading)));
+
+            try
+            {
+                if (listDisplayLoadingState != null && listDisplayLoadingState.isActiveAndEnabled && LoadingStateData.Count > 0)
+                {
+                    listDisplayLoadingState.Data = LoadingStateData;
+                    listDisplayLoadingState?.tableView?.ReloadData();
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Error($"Error while refreshing multivew: {ex.Message}");
+            }
         }
 
         private void StartCoroutine(Action methodToExecute)

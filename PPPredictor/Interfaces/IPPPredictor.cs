@@ -41,5 +41,6 @@ namespace PPPredictor.Interfaces
         List<object> MapPoolOptions { get; }
         object CurrentMapPool { get; set; }
         string PPSuffix { get; }
+        string LoadingStatus { get; set; }
     }
 }

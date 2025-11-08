@@ -26,6 +26,8 @@ namespace PPPredictor.Utilities
 
         public string PPSuffix => string.Empty;
 
+        public string LoadingStatus { get => string.Empty; set { return; } }
+
 #pragma warning disable CS0067
         public event EventHandler<bool> OnDataLoading;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;

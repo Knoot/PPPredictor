@@ -151,7 +151,7 @@ namespace PPPredictor.Counter
                         ppGainText.text = $"[<color=\"{DisplayHelper.GetDisplayColor(gamePlayInfo.ppGain, false, true)}\">{gamePlayInfo.ppGain:F2}{gamePlayInfo.ppSuffix}</color>]";
                         break;
                     case CounterDisplayType.PPAndGainNoBrackets:
-                        ppText.text = $"{maxPPReachedPrefix}{gamePlayInfo.pp:F2}pp{maxPPReachedSuffix}";
+                        ppText.text = $"{maxPPReachedPrefix}{gamePlayInfo.pp:F2}{gamePlayInfo.ppSuffix}{maxPPReachedSuffix}";
                         ppGainText.text = $"<color=\"{DisplayHelper.GetDisplayColor(gamePlayInfo.ppGain, false, true)}\">{gamePlayInfo.ppGain:F2}{gamePlayInfo.ppSuffix}</color>";
                         break;
                     case CounterDisplayType.GainNoBrackets:

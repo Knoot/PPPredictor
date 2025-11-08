@@ -15,12 +15,13 @@ namespace PPPredictor.Interfaces
         bool IsRightArrowActive { get; }
         bool IsMapPoolDropDownActive { get; }
         bool IsLeaderboardNavigationActive { get; }
+        List<object> LsDisplayLoadingStatus { get; }
         IPPPredictor CurrentPPPredictor { get; }
 
         WebSocketMgr WebsocketMgr { get; }
 
         event EventHandler<bool> ViewActivated;
-        event EventHandler<bool> OnDataLoading;
+        event EventHandler<bool?> OnDataLoading;
         event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
         event EventHandler OnMapPoolRefreshed;

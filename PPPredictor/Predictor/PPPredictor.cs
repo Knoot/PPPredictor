@@ -31,6 +31,7 @@ namespace PPPredictor.Utilities
         private readonly CalculatorInstance calculatorInstance;
         private PPPMapPoolShort currentMapPool;
         private List<PPPMapPoolShort> lsMapPools = new List<PPPMapPoolShort>();
+        private string _loadingStatus = string.Empty;
         #endregion
 
         public string LeaderBoardName
@@ -134,6 +135,7 @@ namespace PPPredictor.Utilities
         {
             get => _leaderboardInfo.PpSuffix;
         }
+        public string LoadingStatus { get => _loadingStatus; set => _loadingStatus = value; }
         #endregion
 
         #region eventHandling

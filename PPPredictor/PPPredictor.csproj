@@ -219,6 +219,7 @@
     <Compile Include="Counter\CounterInfoHolder.cs" />
     <Compile Include="Counter\PPPCounter.cs" />
     <Compile Include="Counter\Settings\CounterSettings.cs" />
+    <Compile Include="Data\DisplayInfos\DisplayLoadingStatus.cs" />
     <Compile Include="Data\DisplayInfos\DisplayPPInfo.cs" />
     <Compile Include="Data\DisplayInfos\DisplaySessionInfo.cs" />
     <Compile Include="Data\PPPWebSocketData.cs" />

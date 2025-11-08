@@ -49,7 +49,7 @@ namespace PPPredictor.Utilities
             ppPredictorMgr.OnDataLoading += PpPredictorMgr_OnDataLoading;
         }
 
-        private void PpPredictorMgr_OnDataLoading(object sender, bool isDataLoading)
+        private void PpPredictorMgr_OnDataLoading(object sender, bool? isDataLoading)
         {
             RefreshButtonInteraction();
         }
