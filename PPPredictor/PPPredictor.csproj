@@ -105,6 +105,9 @@
     <Reference Include="BeatmapCore">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
     </Reference>
+    <Reference Include="BeatSaber.Multiplayer.Core">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber Dev\current\Beat Saber_Data\Managed\BeatSaber.Multiplayer.Core.dll</HintPath>
+    </Reference>
     <Reference Include="BeatSaberPlaylistsLib">
       <HintPath>$(GameDirectory)\Libs\BeatSaberPlaylistsLib.dll</HintPath>
     </Reference>
@@ -303,5 +306,13 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\LeaderBoardLogos\Empty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\gIconTrash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\gIconLockClosed.png" />
+    <EmbeddedResource Include="Resources\gIconLockOpen.png" />
+    <EmbeddedResource Include="Resources\gIconRefresh.png" />
   </ItemGroup>
 </Project>

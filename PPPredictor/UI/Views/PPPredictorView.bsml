@@ -27,12 +27,12 @@
       <!--BG length-->
       <horizontal horizontal-fit='PreferredSize' pad-left='0' align='Left' child-align='MiddleLeft' preferred-height='0' anchor-pos-y='7'>
         <vertical vertical-fit='PreferredSize' align='Left' ignore-layout='true' pad-left='47' spacing='-1'>
-          <button text='🗑' hover-hint='Reset Session' on-click='reset-session-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
-          <button text='🔃' hover-hint='Refresh Profile' on-click='refresh-profile-clicked' min-width='8' pref-height='8' interactable='~isNoDataLoading' />
+          <icon-button icon='PPPredictor.Resources.gIconTrash.png' hover-hint='Reset Session' on-click='reset-session-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
+          <icon-button icon='PPPredictor.Resources.gIconRefresh.png' hover-hint='Refresh Profile' on-click='refresh-profile-clicked' min-width='8' pref-height='8' interactable='~isNoDataLoading' />
           <action-button text='?' id='update-info-button' active='~isNewVersionAvailable' hover-hint='Update available' on-click='show-update-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
         </vertical>
         <horizontal horizontal-fit='PreferredSize' align='Left' ignore-layout='true' pad-left='56' pad-top='-17'>
-          <button text='~movePanelIcon' hover-hint='Click to enable movement of the panel. After unlocking just grab the move icon and drag it around. (Other buttons are disabled while movement is on)' on-click='move-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
+          <icon-button icon='~movePanelIcon' hover-hint='Click to enable movement of the panel. After unlocking just grab the move icon and drag it around. (Other buttons are disabled while movement is on)' on-click='move-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
         </horizontal>
       </horizontal>
       <!-- /Buttons -->
@@ -84,8 +84,8 @@
       <!-- Buttons -->
       <horizontal horizontal-fit='PreferredSize' pad-left='0' align='Left' child-align='MiddleLeft' preferred-height='0' anchor-pos-y='7'>
         <vertical vertical-fit='PreferredSize' align='Left' ignore-layout='true' pad-left='47' spacing='-1'>
-          <button text='🗑' hover-hint='Reset Session' on-click='reset-session-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
-          <button text='🔃' hover-hint='Refresh Profile' on-click='refresh-profile-clicked' min-width='8' pref-height='8' interactable='~isNoDataLoading' />
+          <icon-button icon='PPPredictor.Resources.gIconTrash.png' hover-hint='Reset Session' on-click='reset-session-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
+          <icon-button icon='PPPredictor.Resources.gIconRefresh.png' hover-hint='Refresh Profile' on-click='refresh-profile-clicked' min-width='8' pref-height='8' interactable='~isNoDataLoading' />
           <action-button text='?' id='update-info-button' active='~isNewVersionAvailable' hover-hint='Update available' on-click='show-update-clicked' min-width='6' pref-height='8' interactable='~isNoDataLoading' />
         </vertical>
       </horizontal>
