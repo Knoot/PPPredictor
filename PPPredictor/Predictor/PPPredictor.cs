@@ -25,13 +25,11 @@ namespace PPPredictor.Utilities
         internal Leaderboard leaderboardName;
         #region internal values
         private float _percentage;
+        private float _targetPPGain;
+        private float _targetRankGain;
         private PPPBeatMapInfo _currentBeatMapInfo = new PPPBeatMapInfo();
-        private bool _rankGainRunning = false;
-        private double _lastPPGainCall = 0;
         private bool _isActive = false;
-        private DisplayPPInfo _ppDisplay = new DisplayPPInfo();
-        private PPGainResult _ppGainResult = new PPGainResult();
-        private Timer _rankTimer;
+        Dictionary<CalculationMode, DisplayInfos> dctDisplayInfos = new Dictionary<CalculationMode, DisplayInfos>();
         private readonly CalculatorInstance calculatorInstance;
         private PPPMapPoolShort currentMapPool;
         private List<PPPMapPoolShort> lsMapPools = new List<PPPMapPoolShort>();
@@ -86,13 +84,9 @@ namespace PPPredictor.Utilities
             currentMapPool = lsMapPools[index];
             currentMapPool.SelectedByLoading = true;
 
-            //_ppCalculator.OnMapPoolRefreshed += PPCalculator_OnMapPoolRefreshed;
-
-            _rankTimer = new System.Timers.Timer(500);
-            _rankTimer.Elapsed += OnRankTimerElapsed;
-            _rankTimer.AutoReset = false;
-            _rankTimer.Enabled = false;
-
+            dctDisplayInfos.Add(CalculationMode.PercentToPP, new DisplayInfos(CalculationMode.PercentToPP ,(s, e) => OnRankTimerElapsed(s, e, CalculationMode.PercentToPP), (s, e) => { }));
+            dctDisplayInfos.Add(CalculationMode.PPToPercent, new DisplayInfos(CalculationMode.PPToPercent ,(s, e) => OnRankTimerElapsed(s, e, CalculationMode.PPToPercent), (s, e) => { _ = CalculateTargetPPGainPercentage(); }));
+            dctDisplayInfos.Add(CalculationMode.Rank, new DisplayInfos(CalculationMode.Rank ,(s, e) => OnRankTimerElapsed(s, e, CalculationMode.Rank), (s, e) => { _ = CalculateTargetRankGain(); }));
         }
         #endregion
 
@@ -103,6 +97,22 @@ namespace PPPredictor.Utilities
             set
             {
                 _percentage = value;
+            }
+        }
+        public float TargetPPGain
+        {
+            get => _targetPPGain;
+            set
+            {
+                _targetPPGain = value;
+            }
+        }
+        public float TargetRankGain
+        {
+            get => _targetRankGain;
+            set
+            {
+                _targetRankGain = value;
             }
         }
         #region MapPools
@@ -149,7 +159,7 @@ namespace PPPredictor.Utilities
                 _gameplayModifiers = gameplaySetupViewController.gameplayModifiers;
                 _currentBeatMapInfo = calculatorInstance.ApplyModifiersToBeatmapInfo(leaderboardName, currentMapPool.Id, _currentBeatMapInfo, Converter.Converter.ConvertGameplayModifiers(_gameplayModifiers));
                 _currentBeatMapInfo.MaxPP = -1;
-                CalculatePP();
+                CalculateAllValues();
             }
         }
 
@@ -162,7 +172,7 @@ namespace PPPredictor.Utilities
         {
             _currentBeatMapInfo = new PPPBeatMapInfo(selectedBeatmapLevel != null ? Collections.GetCustomLevelHash(selectedBeatmapLevel.levelID) : null, Converter.Converter.ConvertBeatmapKey(beatmapKey));
             await UpdateCurrentBeatMapInfos();
-            CalculatePP();
+            CalculateAllValues();
         }
 
         private async Task UpdateCurrentBeatMapInfos()
@@ -202,6 +212,18 @@ namespace PPPredictor.Utilities
         public double CalculateMaxPP()
         {
             var v = calculatorInstance.CalculateMaxPP(leaderboardName, currentMapPool.Id, _currentBeatMapInfo);
+            return v;
+        }
+
+        public Task<DoubleCalculationResult> CalculatePercentageNeededForPP(double ppGainNeeded, PPPBeatMapInfo beatMapInfo)
+        {
+            var v = calculatorInstance.CalculatePercentageNeededForPP(leaderboardName, currentMapPool.Id, beatMapInfo, ppGainNeeded);
+            return v;
+        }
+
+        public async Task<DoubleCalculationResult> CalculatePercentageNeededForRankGain(int rankGain, PPPBeatMapInfo beatMapInfo)
+        {
+            var v = await calculatorInstance.CalculatePercentageNeededForRankGain(leaderboardName, currentMapPool.Id, beatMapInfo, rankGain);
             return v;
         }
 
@@ -248,57 +270,131 @@ namespace PPPredictor.Utilities
             return (currentPool == null || (currentPool != null && ((newMapPool != null && currentPool.Id != newMapPool.Id) || currentMapPool.SelectedByLoading)));
         }
 
-        public void CalculatePP()
+        public void CalculateAllValues()
         {
+            Plugin.DebugPrint($"CalculateAllValues");
+            CalculatePP(_percentage, CalculationMode.PercentToPP);
+            _ = CalculateTargetPPGainPercentage();
+            _ = CalculateTargetRankGain();
+        }
+
+        public void CalculatePP(float percentage, CalculationMode calculationMode)
+        {
+            Plugin.DebugPrint($"CalculatePP {calculationMode} {percentage}");
             if(currentMapPool == null) return;
             if (_currentBeatMapInfo.MaxPP == -1) _currentBeatMapInfo.MaxPP = CalculateMaxPP();
-            double pp = CalculatePPatPercentage(_percentage, _currentBeatMapInfo);
-            _ppGainResult = calculatorInstance.GetPlayerScorePPGain(leaderboardName, currentMapPool.Id, _currentBeatMapInfo.SelectedMapSearchString, pp);
-            double ppGains = PPCalculator.Zeroizer(_ppGainResult.PpDisplayValue);
-            _ppDisplay = new DisplayPPInfo();
-            if (_currentBeatMapInfo.MaxPP > 0 && pp >= _currentBeatMapInfo.MaxPP)
+            DisplayInfos rankInfos = dctDisplayInfos[calculationMode];
+            if (rankInfos.IsValid)
             {
-                _ppDisplay.PPRaw = $"<color=\"yellow\">{pp:F2}{PPSuffix}</color>";
+                double pp = CalculatePPatPercentage(percentage, _currentBeatMapInfo);
+                rankInfos.PPGainResult = calculatorInstance.GetPlayerScorePPGain(leaderboardName, currentMapPool.Id, _currentBeatMapInfo.SelectedMapSearchString, pp);
+                double ppGains = PPCalculator.Zeroizer(rankInfos.PPGainResult.PpDisplayValue);
+                rankInfos.DisplayPPInfo = new DisplayPPInfo(rankInfos.DisplayPPInfo);
+                if (_currentBeatMapInfo.MaxPP > 0 && pp >= _currentBeatMapInfo.MaxPP)
+                {
+                    rankInfos.DisplayPPInfo.PPRaw = $"<color=\"yellow\">{pp:F2}{PPSuffix}</color>";
+                }
+                else
+                {
+                    rankInfos.DisplayPPInfo.PPRaw = $"{pp:F2}{PPSuffix}";
+                }
+                rankInfos.DisplayPPInfo.PPGain = $"{ppGains:+0.##;-0.##;0}{PPSuffix}";
+                rankInfos.DisplayPPInfo.PPGainDiffColor = DisplayHelper.GetDisplayColor(ppGains, false, true);
             }
             else
             {
-                _ppDisplay.PPRaw = $"{pp:F2}{PPSuffix}";
+                rankInfos.DisplayPPInfo.PPRaw = $"{0:F2}{PPSuffix}";
+                rankInfos.DisplayPPInfo.PPGain = $"{0:+0.##;-0.##;0}{PPSuffix}";
+                rankInfos.DisplayPPInfo.PPGainDiffColor = DisplayHelper.ColorWhite;
             }
-            _ppDisplay.PPGain = $"{ppGains:+0.##;-0.##;0}{PPSuffix}";
-            _ppDisplay.PPGainDiffColor = DisplayHelper.GetDisplayColor(ppGains, false, true);
 
-            DisplayRankGain(null, _ppDisplay);
+            DisplayRankGain(null, rankInfos.DisplayPPInfo, rankInfos.IsValid, calculationMode);
             //Restart rank calculation timer
-            _rankTimer.Stop();
-            _rankTimer.Start();
+            rankInfos.RankTimer.Stop();
+            rankInfos.RankTimer.Start();
         }
 
-        private async void OnRankTimerElapsed(object sender, ElapsedEventArgs e)
+        public void TriggerCalculateTimer(CalculationMode calculationMode)
+        {
+            DisplayInfos rankInfos = dctDisplayInfos[calculationMode];
+            rankInfos.PPCaclulationTimer.Stop();
+            rankInfos.PPCaclulationTimer.Start();
+        }
+
+        public async Task CalculateTargetPPGainPercentage()
+        {
+            Plugin.DebugPrint($"CalculateTargetPPGainPercentage {_targetPPGain}");
+            DisplayInfos rankInfos = dctDisplayInfos[CalculationMode.PPToPercent];
+            rankInfos.DisplayPPInfo = new DisplayPPInfo(CalculationMode.PPToPercent);
+            DoubleCalculationResult result  = await CalculatePercentageNeededForPP(_targetPPGain, _currentBeatMapInfo);
+            float targetPercentage = (float)result.Value;
+            rankInfos.IsValid = result.IsValid;
+            if (!result.IsValid)
+            {
+                rankInfos.DisplayPPInfo.TargetPPPercentage = $"∞";
+            }
+            else
+            {
+                rankInfos.DisplayPPInfo.TargetPPPercentage = $"{targetPercentage:N2}%";
+            }
+            CalculatePP(targetPercentage, CalculationMode.PPToPercent);
+        }
+
+        public async Task CalculateTargetRankGain()
+        {
+            Plugin.DebugPrint($"CalculateTargetRankGain {_targetRankGain}");
+            DisplayInfos rankInfos = dctDisplayInfos[CalculationMode.Rank];
+            rankInfos.DisplayPPInfo = new DisplayPPInfo(CalculationMode.Rank);
+            DoubleCalculationResult result = await CalculatePercentageNeededForRankGain((int)_targetRankGain, _currentBeatMapInfo);
+            float targetPercentage = (float)result.Value;
+            rankInfos.IsValid = result.IsValid;
+            if (!result.IsValid)
+            {
+                rankInfos.DisplayPPInfo.TargetPPPercentage = $"∞";
+            }
+            else
+            {
+                rankInfos.DisplayPPInfo.TargetPPPercentage = $"{targetPercentage:N2}%";
+            }
+            CalculatePP(targetPercentage, CalculationMode.Rank);
+        }
+
+        private async void OnRankTimerElapsed(object sender, ElapsedEventArgs e, CalculationMode resultType)
         {
             RankGainResult rankGain = new RankGainResult(1, 2, 3, 4);
-            if (_rankGainRunning)
+            DisplayInfos rankInfos = dctDisplayInfos[resultType];
+            if (rankInfos.IsValid)
             {
-                _lastPPGainCall = _ppGainResult.PpTotal;
-                return;
+                if (rankInfos.RankGainRunning)
+                {
+                    rankInfos.LastPPGainCall = rankInfos.PPGainResult.PpTotal;
+                    return;
+                }
+                if (rankInfos.LastPPGainCall == 0)
+                {
+                    rankInfos.RankGainRunning = true;
+                    rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, currentMapPool.Id, rankInfos.PPGainResult.PpTotal);
+                    rankInfos.RankGainRunning = false;
+                }
+                if (rankInfos.LastPPGainCall > 0)
+                {
+                    rankInfos.RankGainRunning = true;
+                    rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, currentMapPool.Id, rankInfos.LastPPGainCall);
+                    rankInfos.RankGainRunning = false;
+                    rankInfos.LastPPGainCall = 0;
+                }
             }
-            if (_lastPPGainCall == 0)
+            else
             {
-                _rankGainRunning = true;
-                rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, currentMapPool.Id, _ppGainResult.PpTotal);
-                _rankGainRunning = false;
+                //Call with 0pp always returns the current player ranks, no backend calls
+                rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, currentMapPool.Id, 0);
             }
-            if (_lastPPGainCall > 0)
-            {
-                _rankGainRunning = true;
-                rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, currentMapPool.Id, _lastPPGainCall);
-                _rankGainRunning = false;
-                _lastPPGainCall = 0;
-            }
-            DisplayRankGain(rankGain, _ppDisplay);
+            DisplayRankGain(rankGain, rankInfos.DisplayPPInfo, rankInfos.IsValid, resultType);
         }
 
-        private void DisplayRankGain(RankGainResult rankGainResult, DisplayPPInfo ppDisplay)
+        private void DisplayRankGain(RankGainResult rankGainResult, DisplayPPInfo ppDisplay, bool isValid, CalculationMode resultType)
         {
+            ppDisplay.calculationMode = resultType;
             if (rankGainResult != null)
             {
                 ppDisplay.PredictedRankDiffColor = DisplayHelper.GetDisplayColor(rankGainResult.RankGainGlobal, false);
@@ -374,7 +470,7 @@ namespace PPPredictor.Utilities
             {
                 await UpdateCurrentBeatMapInfos();
             }
-            CalculatePP();
+            CalculateAllValues();
             IsDataLoading(false);
         }
 
@@ -390,7 +486,7 @@ namespace PPPredictor.Utilities
             await UpdateCurrentAndCheckResetSession(resetAll);
             IsDataLoading(true);
             await calculatorInstance.GetPlayerScores(leaderboardName, currentMapPool.Id, 100, 100);
-            CalculatePP();
+            CalculateAllValues();
             IsDataLoading(false);
         }
 
@@ -401,7 +497,7 @@ namespace PPPredictor.Utilities
             if (setActive || hasPoolChanged)
             {
                 _ = DisplaySession(false);
-                CalculatePP();
+                CalculateAllValues();
             }
         }
 

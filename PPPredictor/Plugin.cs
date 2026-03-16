@@ -1,12 +1,17 @@
-﻿using HarmonyLib;
+﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.Util;
+using HarmonyLib;
 using IPA;
 using PPPredictor.Data;
 using PPPredictor.Installers;
+using PPPredictor.UI.Component.Tags;
+using PPPredictor.UI.Component.TypeHandlers;
 using PPPredictor.UI.ViewController;
 using PPPredictor.Utilities;
 using SiraUtil.Zenject;
-using System.Reflection;
 using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static PPPredictor.Core.DataType.Enums;
 using IPALogger = IPA.Logging.Logger;
@@ -27,6 +32,8 @@ namespace PPPredictor
         private const string kHarmonyID = "com.github.no-1-noob.PPPredictor";
         private static readonly Harmony harmony = new Harmony(kHarmonyID);
 
+        private Zenjector zenjector;
+
         //Only Used for UnitTests
         internal Plugin()
         {
@@ -42,6 +49,7 @@ namespace PPPredictor
         /// </summary>
         public Plugin(IPALogger logger, Zenjector zenjector)
         {
+            this.zenjector = zenjector;
             Instance = this;
             Log = logger;
             ProfileInfo = ProfileInfoMgr.LoadProfileInfo();
@@ -56,6 +64,21 @@ namespace PPPredictor
         public void OnApplicationStart()
         {
             ApplyHarmonyPatches();
+            MainMenuAwaiter.MainMenuInitializing += MainMenuAwaiter_MainMenuInitializing; ;
+        }
+
+        private void MainMenuAwaiter_MainMenuInitializing()
+        {
+            try
+            {
+                BSMLParser.Instance.RegisterTag(new PPDisplayComponentTag());
+                BSMLParser.Instance.RegisterTypeHandler(new PPDisplayComponentTypeHandler());
+                pppViewController.ParseGUI();
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Error($"Error registering tag PPDisplayComponent {ex.Message}");
+            }
         }
 
         private static void ApplyHarmonyPatches()

@@ -5,13 +5,16 @@ using PPPredictor.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static PPPredictor.Core.DataType.Enums;
 
 namespace PPPredictor.Utilities
 {
     internal class PPPredictorDummy : IPPPredictor
     {
         public float Percentage { get => 0; set { return; } }
+        public float TargetPPGain { get => 0; set { return; } }
 
+        public float TargetRankGain { get => 0; set { return; } }
         public string LeaderBoardName => string.Empty;
 
         public string LeaderBoardIcon => "PPPredictor.Resources.LeaderBoardLogos.ScoreSaber.png";
@@ -26,6 +29,8 @@ namespace PPPredictor.Utilities
 
         public string PPSuffix => string.Empty;
 
+
+
 #pragma warning disable CS0067
         public event EventHandler<bool> OnDataLoading;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
@@ -38,7 +43,17 @@ namespace PPPredictor.Utilities
             return 0D;
         }
 
-        public void CalculatePP()
+        public void CalculateAllValues()
+        {
+
+        }
+
+        public void TriggerCalculateTimer(CalculationMode calculationMode)
+        {
+            return;
+        }
+
+        public void CalculatePP(float percentage, CalculationMode calculationMode)
         {
             return;
         }

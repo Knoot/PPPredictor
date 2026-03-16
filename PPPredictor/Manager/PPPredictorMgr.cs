@@ -50,6 +50,8 @@ namespace PPPredictor.Utilities
         internal static CalculatorInstance CalculatorInstance;
         private SongDetails songDetails { get; set; }
         private float _percentage;
+        private float _targetPPGain;
+        private float _targetRankGain;
 
         internal PPPredictorMgr()
         {
@@ -97,6 +99,8 @@ namespace PPPredictor.Utilities
             foreach (IPPPredictor pPPredictor in _lsPPPredictor)
             {
                 pPPredictor.Percentage = _percentage;
+                pPPredictor.TargetPPGain = _targetPPGain;
+                pPPredictor.TargetRankGain = _targetRankGain;
                 pPPredictor.OnDataLoading += PPPredictor_OnDataLoading;
                 pPPredictor.OnDisplayPPInfo += PPPredictor_OnDisplayPPInfo;
                 pPPredictor.OnDisplaySessionInfo += PPPredictor_OnDisplaySessionInfo;
@@ -217,7 +221,7 @@ namespace PPPredictor.Utilities
             isLeftArrowActive = index > 0;
             isRightArrowActive = index < _lsPPPredictor.Count() - 1;
             isMapPoolDropDownActive = CurrentPPPredictor.MapPoolOptions.Count() > 1;
-            CurrentPPPredictor.CalculatePP();
+            CurrentPPPredictor.CalculateAllValues();
             if(triggerMapPoolRefresh) OnMapPoolRefreshed?.Invoke(this, null);
         }
 
@@ -259,6 +263,24 @@ namespace PPPredictor.Utilities
             foreach (var item in _lsPPPredictor)
             {
                 item.Percentage = percentage;
+            }
+        }
+
+        public void SetTargetPPGain(float targetPPGain)
+        {
+            _targetPPGain = targetPPGain;
+            foreach (var item in _lsPPPredictor)
+            {
+                item.TargetPPGain = targetPPGain;
+            }
+        }
+
+        public void SetTargetRankGain(float targetRankGain)
+        {
+            _targetRankGain = targetRankGain;
+            foreach (var item in _lsPPPredictor)
+            {
+                item.TargetRankGain = targetRankGain;
             }
         }
 

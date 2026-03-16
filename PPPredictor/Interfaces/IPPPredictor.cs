@@ -6,6 +6,7 @@ using PPPredictor.Data.DisplayInfos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static PPPredictor.Core.DataType.Enums;
 
 namespace PPPredictor.Interfaces
 {
@@ -19,21 +20,26 @@ namespace PPPredictor.Interfaces
         void ResetDisplay(bool resetAll);
         double CalculatePPatPercentage(double percentage, PPPBeatMapInfo beatMapInfo, bool levelFailed = false, bool levelPaused = false);
         double CalculateMaxPP();
+        void CalculatePP(float percentage, CalculationMode calculationMode);
+        void TriggerCalculateTimer(CalculationMode calculationMode);
+        void CalculateAllValues();
         PPPBeatMapInfo GetModifiedBeatMapInfo(GameplayModifiers gameplayModifiers, bool levelFailed = false, bool levelPaused = false);
         double CalculatePPGain(double pp);
         bool IsRanked();
 
         double? GetPersonalBest();
-        void CalculatePP();
         void SetActive(bool setActive, bool hasPoolChanged = false);
         PPPMapPoolShort FindPoolWithSyncURL(string syncUrl);
         Task GetMapPoolIconData();
         Task UpdateCurrentBeatMapInfos(BeatmapLevel selectedBeatmapLevel, BeatmapKey beatmapKey);
+
         event EventHandler<bool> OnDataLoading;
         event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
         event EventHandler OnMapPoolRefreshed;
         float Percentage { get; set; }
+        float TargetPPGain { get; set; }
+        float TargetRankGain { get; set; }
         string LeaderBoardName { get; }
         string LeaderBoardIcon { get; }
         string MapPoolIcon { get; }

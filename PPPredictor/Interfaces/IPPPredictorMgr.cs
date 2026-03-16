@@ -43,6 +43,8 @@ namespace PPPredictor.Interfaces
 
         void SetPercentage(float percentage);
 
+        void SetTargetPPGain(float targetPPGain);
+
         double GetPercentage();
 
         void ResetDisplay(bool resetAll);
@@ -75,5 +77,6 @@ namespace PPPredictor.Interfaces
         void FindPoolWithSyncURL(IPlaylist playlist);
 
         bool IsDataLoading();
+        void SetTargetRankGain(float value);
     }
 }

@@ -17,9 +17,12 @@ using HarmonyLib;
 using System.Threading.Tasks;
 using PPPredictor.Interfaces;
 using PPPredictor.Core.DataType.MapPool;
+using PPPredictor.UI.Component.Component;
+using static PPPredictor.Core.DataType.Enums;
 
 namespace PPPredictor.UI.ViewController
 {
+
     [ViewDefinition("PPPredictor.UI.Views.PPPredictorView.bsml")]
     [HotReload(RelativePathToLayout = @"..\Views\PPPredictorView.bsml")]
     class PPPredictorViewController : IInitializable, IDisposable, INotifyPropertyChanged
@@ -31,7 +34,7 @@ namespace PPPredictor.UI.ViewController
 #pragma warning restore CS0649
         public event PropertyChangedEventHandler PropertyChanged;
         private DisplaySessionInfo displaySessionInfo;
-        private DisplayPPInfo displayPPInfo;
+        Dictionary<CalculationMode, DisplayPPInfo> dctDisplayPPInfo = new Dictionary<CalculationMode, DisplayPPInfo>();
         private bool _isDataLoading;
         private bool _isScreenMoving = false;
         private List<Action> _lsPropertyChangedActions = new List<Action>();
@@ -44,10 +47,14 @@ namespace PPPredictor.UI.ViewController
         }
         public void Initialize()
         {
+            BSMLParser.Instance.Initialize();
+
             Plugin.pppViewController = this;
             displaySessionInfo = new DisplaySessionInfo();
-            displayPPInfo = new DisplayPPInfo();
-            floatingScreen = FloatingScreen.CreateFloatingScreen(new Vector2(75, 100), true, Plugin.ProfileInfo.Position, new Quaternion(0, 0, 0, 0));
+            dctDisplayPPInfo.Add(CalculationMode.PercentToPP, new DisplayPPInfo(CalculationMode.PercentToPP));
+            dctDisplayPPInfo.Add(CalculationMode.PPToPercent, new DisplayPPInfo(CalculationMode.PPToPercent));
+            dctDisplayPPInfo.Add(CalculationMode.Rank, new DisplayPPInfo(CalculationMode.Rank));
+            floatingScreen = FloatingScreen.CreateFloatingScreen(new Vector2(75, 125), true, Plugin.ProfileInfo.Position, new Quaternion(0, 0, 0, 0));
             floatingScreen.gameObject.name = "BSMLFloatingScreen_PPPredictor";
             floatingScreen.gameObject.SetActive(false);
             floatingScreen.transform.eulerAngles = Plugin.ProfileInfo.EulerAngles;
@@ -58,16 +65,19 @@ namespace PPPredictor.UI.ViewController
             floatingScreen.Handle.hideFlags = HideFlags.HideInHierarchy;
             floatingScreen.ShowHandle = _isScreenMoving;
             floatingScreen.HighlightHandle = false;
-            SetupHandleTexture();
 
             floatingScreen.HandleReleased += OnScreenHandleReleased;
-            BSMLParser.Instance.Initialize();
-            BSMLParser.Instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "PPPredictor.UI.Views.PPPredictorView.bsml"), floatingScreen.gameObject, this);
             ppPredictorMgr.ViewActivated += PpPredictorMgr_ViewActivated;
             ppPredictorMgr.OnDataLoading += PpPredictorMgr_OnDataLoading;
             ppPredictorMgr.OnDisplayPPInfo += PpPredictorMgr_OnDisplayPPInfo;
             ppPredictorMgr.OnDisplaySessionInfo += PpPredictorMgr_OnDisplaySessionInfo;
             ppPredictorMgr.OnMapPoolRefreshed += PpPredictorMgr_OnMapPoolRefreshed;
+        }
+
+        public void ParseGUI()
+        {
+            SetupHandleTexture();
+            BSMLParser.Instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "PPPredictor.UI.Views.PPPredictorView.bsml"), floatingScreen.gameObject, this);
         }
 
         private async void SetupHandleTexture()
@@ -93,8 +103,8 @@ namespace PPPredictor.UI.ViewController
 
         private void PpPredictorMgr_OnDisplayPPInfo(object sender, DisplayPPInfo displayPPInfo)
         {
-            this.displayPPInfo = displayPPInfo;
-            UpdatePPDisplay();
+            this.dctDisplayPPInfo[displayPPInfo.calculationMode] = displayPPInfo;
+            UpdatePPDisplay(displayPPInfo.calculationMode);
         }
 
         private void PpPredictorMgr_OnDataLoading(object sender, bool isDataLoading)
@@ -139,10 +149,17 @@ namespace PPPredictor.UI.ViewController
             {
                 tabSelector.TextSegmentedControl.didSelectCellEvent += OnSelectedCellEventChanged;
             }
+            if (tabModeSelector)
+            {
+                tabModeSelector.transform.localScale = new Vector3(.5f,.5f,.5f);
+                tabModeSelector.transform.Translate(new Vector3(-.3f, .5f, 0));
+                //TODO:
+                //tabModeSelector.TextSegmentedControl.didSelectCellEvent += ;
+            }
 
             SliderFormatting();
 
-            UpdateMinMaxIncements(sliderFine.Slider.value);
+            UpdateMinMaxIncements(sliderPercentToPP.Slider.value);
         }
 
         private void SliderFormatting()
@@ -163,8 +180,8 @@ namespace PPPredictor.UI.ViewController
             incrementMax.transform.Rotate(0, 0, -7);
             incrementMax.TextMesh.transform.Rotate(0, 0, 7);
 
-            sliderFine.transform.localScale = new Vector3(.85f, 1, 1);
-            sliderFine.transform.Translate(new Vector3(1, 2, 0));
+            sliderPercentToPP.transform.localScale = new Vector3(.85f, 1, 1);
+            sliderPercentToPP.transform.Translate(new Vector3(1, 2, 0));
         }
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value null
@@ -173,18 +190,40 @@ namespace PPPredictor.UI.ViewController
         private readonly IncrementSetting incrementMin;
         [UIComponent("incrementMax")]
         private readonly IncrementSetting incrementMax;
-        [UIComponent("sliderFine")]
-        private readonly SliderSetting sliderFine;
+        [UIComponent("sliderPercentToPP")]
+        private readonly SliderSetting sliderPercentToPP;
+        [UIComponent("sliderPPToPercent")]
+        private readonly SliderSetting sliderPPToPercent;
+        [UIComponent("sliderRank")]
+        private readonly SliderSetting sliderRank;
         [UIComponent("tabSelector")]
         private readonly TabSelector tabSelector;
+        [UIComponent("tabModeSelector")]
+        private readonly TabSelector tabModeSelector;
         [UIComponent("dropdown-map-pools")]
         private readonly DropDownListSetting dropDownMapPools;
-        #endregion
+        [UIComponent("ppDisplayComponentPPToPercent")]
+        private readonly PPDisplayComponent ppDisplayComponentPPToPercent;
+        [UIComponent("ppDisplayComponentPercentToPP")]
+        private readonly PPDisplayComponent ppDisplayComponentPercentToPP;
+        [UIComponent("ppDisplayComponentRank")]
+        private readonly PPDisplayComponent ppDisplayComponentRank;
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value null
-        [UIAction("sliderFormat")]
-        private string SliderFormat(float f)
+        #endregion
+        [UIAction("sliderFormatPercentToPP")]
+        private string sliderFormatPercentToPP(float f)
         {
             return $"{f:F2} %";
+        }
+        [UIAction("sliderFormatPPToPercent")]
+        private string SliderFormatPPToPercent(float f)
+        {
+            return $"{f:F1}{ppPredictorMgr.CurrentPPPredictor.PPSuffix}";
+        }
+        [UIAction("sliderFormatRank")]
+        private string SliderFormatRank(float f)
+        {
+            return $"+{f:F2} ranks";
         }
 
         #region buttons
@@ -259,17 +298,45 @@ namespace PPPredictor.UI.ViewController
         #endregion
 
         #region slider max min input
-        [UIValue("sliderFineValue")]
-        private float SliderFineValue
+        [UIValue("sliderValuePercentToPP")]
+        private float SliderValuePercentToPP
         {
             get => ppPredictorMgr.CurrentPPPredictor.Percentage;
             set
             {
                 ppPredictorMgr.SetPercentage(value);
                 Plugin.ProfileInfo.LastPercentageSelected = ppPredictorMgr.CurrentPPPredictor.Percentage;
-                ppPredictorMgr.CurrentPPPredictor.CalculatePP();
-                sliderFine.Slider.value = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SliderFineValue)));
+                ppPredictorMgr.CurrentPPPredictor.CalculatePP(ppPredictorMgr.CurrentPPPredictor.Percentage, CalculationMode.PercentToPP);
+                sliderPercentToPP.Slider.value = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SliderValuePercentToPP)));
+            }
+        }
+
+        [UIValue("sliderValuePPtoPercent")]
+        private float SliderValuePPtoPercent
+        {
+            get => ppPredictorMgr.CurrentPPPredictor.TargetPPGain;
+            set
+            {
+                ppPredictorMgr.SetTargetPPGain(value);
+                Plugin.ProfileInfo.LastTargetPPGainSelected = ppPredictorMgr.CurrentPPPredictor.TargetPPGain;
+                ppPredictorMgr.CurrentPPPredictor.TriggerCalculateTimer(CalculationMode.PPToPercent);
+                sliderPPToPercent.Slider.value = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SliderValuePPtoPercent)));
+            }
+        }
+
+        [UIValue("sliderValueRank")]
+        private float SliderValueRank
+        {
+            get => ppPredictorMgr.CurrentPPPredictor.TargetRankGain;
+            set
+            {
+                ppPredictorMgr.SetTargetRankGain(value);
+                Plugin.ProfileInfo.LastTargetRankGain = ppPredictorMgr.CurrentPPPredictor.TargetRankGain;
+                ppPredictorMgr.CurrentPPPredictor.TriggerCalculateTimer(CalculationMode.Rank);
+                sliderRank.Slider.value = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SliderValueRank)));
             }
         }
 
@@ -281,7 +348,7 @@ namespace PPPredictor.UI.ViewController
             {
                 Plugin.ProfileInfo.LastMinPercentageSelected = value;
                 incrementMax.MinValue = Plugin.ProfileInfo.LastMinPercentageSelected + 10;
-                UpdateMinMaxIncements(sliderFine.Slider.value);
+                UpdateMinMaxIncements(sliderPercentToPP.Slider.value);
             }
         }
 
@@ -293,35 +360,20 @@ namespace PPPredictor.UI.ViewController
             {
                 Plugin.ProfileInfo.LastMaxPercentageSelected = value;
                 incrementMin.MaxValue = Plugin.ProfileInfo.LastMaxPercentageSelected - 10;
-                UpdateMinMaxIncements(sliderFine.Slider.value);
+                UpdateMinMaxIncements(sliderPercentToPP.Slider.value);
             }
         }
         private void UpdateMinMaxIncements(float oldSliderValue)
         {
-            sliderFine.Slider.minValue = Plugin.ProfileInfo.LastMinPercentageSelected;
-            sliderFine.Slider.maxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
-            SliderFineValue = Math.Max(Math.Min(oldSliderValue, Plugin.ProfileInfo.LastMaxPercentageSelected), Plugin.ProfileInfo.LastMinPercentageSelected);
+            sliderPercentToPP.Slider.minValue = Plugin.ProfileInfo.LastMinPercentageSelected;
+            sliderPercentToPP.Slider.maxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
+            SliderValuePercentToPP = Math.Max(Math.Min(oldSliderValue, Plugin.ProfileInfo.LastMaxPercentageSelected), Plugin.ProfileInfo.LastMinPercentageSelected);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MaxValue)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MinValue)));
         }
 
         #endregion
 
-        [UIValue("ppRaw")]
-        private string PPRaw
-        {
-            get => displayPPInfo.PPRaw;
-        }
-        [UIValue("ppGain")]
-        private string PPGain
-        {
-            get => displayPPInfo.PPGain;
-        }
-        [UIValue("ppGainDiffColor")]
-        private string PPGainDiffColor
-        {
-            get => displayPPInfo.PPGainDiffColor;
-        }
         #region UI Values session
         [UIValue("sessionRank")]
         private string SessionRank
@@ -375,36 +427,6 @@ namespace PPPredictor.UI.ViewController
         }
         #endregion
         #region UI Values Predicted Rank
-        [UIValue("predictedRank")]
-        private string PredictedRank
-        {
-            get => displayPPInfo.PredictedRank;
-        }
-        [UIValue("predictedRankDiff")]
-        private string PredictedRankDiff
-        {
-            get => displayPPInfo.PredictedRankDiff;
-        }
-        [UIValue("predictedRankDiffColor")]
-        private string PredictedRankDiffColor
-        {
-            get => displayPPInfo.PredictedRankDiffColor;
-        }
-        [UIValue("predictedCountryRank")]
-        private string PredictedCountryRank
-        {
-            get => displayPPInfo.PredictedCountryRank;
-        }
-        [UIValue("predictedCountryRankDiff")]
-        private string PredictedCountryRankDiff
-        {
-            get => displayPPInfo.PredictedCountryRankDiff;
-        }
-        [UIValue("predictedCountryRankDiffColor")]
-        private string PredictedCountryRankDiffColor
-        {
-            get => displayPPInfo.PredictedCountryRankDiffColor;
-        }
         #endregion
         [UIValue("isDataLoading")]
         private bool IsDataLoading
@@ -486,6 +508,22 @@ namespace PPPredictor.UI.ViewController
         }
         #endregion
 
+        [UIValue("displayPPInfoPercentToPP")]
+        public object DisplayPPInfoPercentToPP
+        {
+            get => this.dctDisplayPPInfo[CalculationMode.PercentToPP];
+        }
+        [UIValue("displayPPInfoPPToPercent")]
+        public object DisplayPPInfoPPToPercent
+        {
+            get => this.dctDisplayPPInfo[CalculationMode.PPToPercent];
+        }
+        [UIValue("displayPPInfoRank")]
+        public object DisplayPPInfoRank
+        {
+            get => this.dctDisplayPPInfo[CalculationMode.Rank];
+        }
+
         #region moving panel
         [UIAction("move-panel-clicked")]
         private void MovePanelClicked()
@@ -532,6 +570,8 @@ namespace PPPredictor.UI.ViewController
                 tabSelector.TextSegmentedControl.SelectCellWithNumber(Plugin.ProfileInfo.SelectedTab);
                 AccessTools.Method(typeof(TabSelector), "TabSelected").Invoke(tabSelector, new object[] { tabSelector.TextSegmentedControl, Plugin.ProfileInfo.SelectedTab });
             }
+            await Task.Delay(5000);
+            Plugin.DebugPrint("try to change tabs");
         }
 
         private void OnSelectedCellEventChanged(SegmentedControl seg, int index)
@@ -541,7 +581,10 @@ namespace PPPredictor.UI.ViewController
 
         private void DisplayInitialPercentages()
         {
-            SliderFineValue = Plugin.ProfileInfo.LastPercentageSelected;
+            Plugin.DebugPrint($"DisplayInitialPercentages {Plugin.ProfileInfo.LastPercentageSelected} {Plugin.ProfileInfo.LastTargetPPGainSelected} {Plugin.ProfileInfo.LastTargetRankGain}");
+            SliderValuePercentToPP = Plugin.ProfileInfo.LastPercentageSelected;
+            SliderValuePPtoPercent = Plugin.ProfileInfo.LastTargetPPGainSelected;
+            SliderValueRank = Plugin.ProfileInfo.LastTargetRankGain;
             MinValue = Plugin.ProfileInfo.LastMinPercentageSelected;
             MaxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
         }
@@ -622,22 +665,25 @@ namespace PPPredictor.UI.ViewController
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SessionPPDiffColor)));
         }
 
-        private void UpdatePPDisplay()
+        private void UpdatePPDisplay(CalculationMode calculationMode)
         {
-            StartCoroutine(UpdatePPDisplayInternal);
+            StartCoroutine(() => UpdatePPDisplayInternal(calculationMode));
         }
 
-        private void UpdatePPDisplayInternal()
+        private void UpdatePPDisplayInternal(CalculationMode calculationMode)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPRaw)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPGain)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPGainDiffColor)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRank)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRankDiff)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRankDiffColor)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedCountryRank)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedCountryRankDiff)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedCountryRankDiffColor)));
+            if(calculationMode == CalculationMode.PPToPercent && ppDisplayComponentPPToPercent != null)
+            {
+                ppDisplayComponentPPToPercent.UpdateTexts(dctDisplayPPInfo[CalculationMode.PPToPercent]);
+            }
+            else if (calculationMode == CalculationMode.PercentToPP && ppDisplayComponentPercentToPP != null)
+            {
+                ppDisplayComponentPercentToPP.UpdateTexts(dctDisplayPPInfo[CalculationMode.PercentToPP]);
+            }
+            else if (calculationMode == CalculationMode.Rank && ppDisplayComponentRank != null)
+            {
+                ppDisplayComponentRank.UpdateTexts(dctDisplayPPInfo[CalculationMode.Rank]);
+            }
         }
 
         private void UpdateLeaderBoardDisplay()
@@ -693,8 +739,10 @@ namespace PPPredictor.UI.ViewController
             UpdateMapPoolChoices();
             UpdateLeaderBoardDisplay();
             UpdateSessionDisplay();
-            UpdatePPDisplay();
-
+            foreach (CalculationMode mode in Enum.GetValues(typeof(CalculationMode)))
+            {
+                UpdatePPDisplay(mode);
+            }
         }
     }
 }

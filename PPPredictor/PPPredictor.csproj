@@ -216,9 +216,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converter\Converter.cs" />
+    <Compile Include="Core\DataType\DoubleCalculationResult.cs" />
     <Compile Include="Counter\CounterInfoHolder.cs" />
     <Compile Include="Counter\PPPCounter.cs" />
     <Compile Include="Counter\Settings\CounterSettings.cs" />
+    <Compile Include="Data\DisplayInfos\DisplayInfos.cs" />
     <Compile Include="Data\DisplayInfos\DisplayPPInfo.cs" />
     <Compile Include="Data\DisplayInfos\DisplaySessionInfo.cs" />
     <Compile Include="Data\PPPWebSocketData.cs" />
@@ -232,6 +234,9 @@
     <Compile Include="Interfaces\IPPPredictorMgr.cs" />
     <Compile Include="Interfaces\IPPPWebSocket.cs" />
     <Compile Include="HarmonyPatch\HarmonyPatch.cs" />
+    <Compile Include="UI\Component\Component\PPDisplayComponent.cs" />
+    <Compile Include="UI\Component\Tags\PPDisplayComponentTag.cs" />
+    <Compile Include="UI\Component\TypeHandlers\PPDisplayComponentTypeHandler.cs" />
     <Compile Include="WebSocket\PPPWebSocket.cs" />
     <Compile Include="WebSocket\WebSocketOverlayServer.cs" />
     <Compile Include="UI\PPPredictorFlowCoordinator.cs" />
@@ -297,11 +302,149 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\**\*.cs" Link="Core\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\API\accsaberapi.cs">
+      <Link>Core\API\accsaberapi.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\API\beatleaderapi.cs">
+      <Link>Core\API\beatleaderapi.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\API\hitbloqapi.cs">
+      <Link>Core\API\hitbloqapi.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\API\scoresaberapi.cs">
+      <Link>Core\API\scoresaberapi.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\CalculatorInstance.cs">
+      <Link>Core\CalculatorInstance.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculator.cs">
+      <Link>Core\Calculator\PPCalculator.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculatorAccSaber.cs">
+      <Link>Core\Calculator\PPCalculatorAccSaber.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculatorBeatLeader.cs">
+      <Link>Core\Calculator\PPCalculatorBeatLeader.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculatorHitBloq.cs">
+      <Link>Core\Calculator\PPCalculatorHitBloq.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculatorNoLeaderboard.cs">
+      <Link>Core\Calculator\PPCalculatorNoLeaderboard.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Calculator\PPCalculatorScoreSaber.cs">
+      <Link>Core\Calculator\PPCalculatorScoreSaber.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Constants.cs">
+      <Link>Core\Constants.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\BeatSaberEncapsulation\BeatmapKey.cs">
+      <Link>Core\DataType\BeatSaberEncapsulation\BeatmapKey.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\BeatSaberEncapsulation\BeatmapLevel.cs">
+      <Link>Core\DataType\BeatSaberEncapsulation\BeatmapLevel.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\BeatSaberEncapsulation\GameplayModifiers.cs">
+      <Link>Core\DataType\BeatSaberEncapsulation\GameplayModifiers.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Curve\BeatLeaderPPPCurve.cs">
+      <Link>Core\DataType\Curve\BeatLeaderPPPCurve.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Curve\CurveInfo.cs">
+      <Link>Core\DataType\Curve\CurveInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Curve\CurveParser.cs">
+      <Link>Core\DataType\Curve\CurveParser.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Curve\CustomPPPCurve.cs">
+      <Link>Core\DataType\Curve\CustomPPPCurve.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Enums.cs">
+      <Link>Core\DataType\Enums.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\AccSaberDataTypes.cs">
+      <Link>Core\DataType\LeaderBoard\AccSaberDataTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\BeatLeaderDataTypes.cs">
+      <Link>Core\DataType\LeaderBoard\BeatLeaderDataTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\HitBloqDataTypes.cs">
+      <Link>Core\DataType\LeaderBoard\HitBloqDataTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\LeaderboardData.cs">
+      <Link>Core\DataType\LeaderBoard\LeaderboardData.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\PPPLeaderboardInfo.cs">
+      <Link>Core\DataType\LeaderBoard\PPPLeaderboardInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\LeaderBoard\ScoreSaberDataTypes.cs">
+      <Link>Core\DataType\LeaderBoard\ScoreSaberDataTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\MapPool\PPPMapPool.cs">
+      <Link>Core\DataType\MapPool\PPPMapPool.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\MapPool\PPPMapPoolEntry.cs">
+      <Link>Core\DataType\MapPool\PPPMapPoolEntry.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\MapPool\PPPMapPoolShort.cs">
+      <Link>Core\DataType\MapPool\PPPMapPoolShort.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\PPGainResult.cs">
+      <Link>Core\DataType\PPGainResult.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\PPPBeatMapInfo.cs">
+      <Link>Core\DataType\PPPBeatMapInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\PPPPlayer.cs">
+      <Link>Core\DataType\PPPPlayer.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\PPPScoreSetData.cs">
+      <Link>Core\DataType\PPPScoreSetData.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\PPPStarRating.cs">
+      <Link>Core\DataType\PPPStarRating.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\RankGainResult.cs">
+      <Link>Core\DataType\RankGainResult.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Score\PPPScore.cs">
+      <Link>Core\DataType\Score\PPPScore.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Score\PPPScoreCollection.cs">
+      <Link>Core\DataType\Score\PPPScoreCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\DataType\Score\ShortScore.cs">
+      <Link>Core\DataType\Score\ShortScore.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Interface\IAccSaberAPI.cs">
+      <Link>Core\Interface\IAccSaberAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Interface\IBeatLeaderAPI.cs">
+      <Link>Core\Interface\IBeatLeaderAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Interface\IHitBloqAPI.cs">
+      <Link>Core\Interface\IHitBloqAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Interface\IPPPCurve.cs">
+      <Link>Core\Interface\IPPPCurve.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Interface\IScoresaberAPI.cs">
+      <Link>Core\Interface\IScoresaberAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Logging.cs">
+      <Link>Core\Logging.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Settings.cs">
+      <Link>Core\Settings.cs</Link>
+    </Compile>
+    <Compile Include="..\PPPredictor.Core\PPPredictor.Core\Utils.cs">
+      <Link>Core\Utils.cs</Link>
+    </Compile>
     <Compile Remove="..\PPPredictor.Core\obj\**\*;..\PPPredictor.Core\**\obj\**\*" />
     <Compile Remove="..\PPPredictor.Core\**\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\LeaderBoardLogos\Empty.png" />
   </ItemGroup>
+  <ItemGroup />
 </Project>

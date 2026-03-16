@@ -15,6 +15,8 @@ namespace PPPredictor.Data
     {
         Dictionary<string, LeaderboardData> _dctleaderBoardData;
         private float _lastPercentageSelected;
+        private float _lastTargetPPGainSelected;
+        private float _lastTargetRankGain;
         private SVector3 _position;
         private SVector3 _eulerAngles;
         private bool _displaySessionValues;
@@ -55,6 +57,8 @@ namespace PPPredictor.Data
         public ProfileInfo()
         {
             LastPercentageSelected = 90;
+            LastTargetPPGainSelected = 1;
+            LastTargetRankGain = 1;
             Position = MenuPositionHelper.UnderScoreboardPosition;
             EulerAngles = MenuPositionHelper.UnderScoreboardEulerAngles;
             DisplaySessionValues = false;
@@ -96,6 +100,8 @@ namespace PPPredictor.Data
         }
 
         public float LastPercentageSelected { get => _lastPercentageSelected; set => _lastPercentageSelected = value; }
+        public float LastTargetPPGainSelected { get => _lastTargetPPGainSelected; set => _lastTargetPPGainSelected = value; }
+        public float LastTargetRankGain { get => _lastTargetRankGain; set => _lastTargetRankGain = value; }
         public SVector3 Position { get => _position; set => _position = value; }
         public SVector3 EulerAngles { get => _eulerAngles; set => _eulerAngles = value; }
         public bool DisplaySessionValues { get => _displaySessionValues; set => _displaySessionValues = value; }
