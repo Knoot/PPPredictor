@@ -5,4 +5,5 @@
 		<ImportBSMTTargets>True</ImportBSMTTargets>
 		<BSMTProjectType>BSIPA</BSMTProjectType>
 	</PropertyGroup>
+	<Import Project="Directory.Build.local.props" Condition="Exists('Directory.Build.local.props')" />
 </Project>

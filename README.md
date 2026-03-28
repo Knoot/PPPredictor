@@ -48,3 +48,13 @@ Developer
 In the main folder of the project execute 
 `git submodule update --init --recursive`
 in the terminal to initialize the PPPreditor.Core Submodule code.
+
+In the PPPredictor folder create a file `Directory.Build.local.props` with the reference to your BeatSaber installation Path
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <PropertyGroup>
+        <GameDirectory>YOUR_PATH_TO_YOUR_STEAM_FOLDER/Steam/steamapps/common/Beat Saber</GameDirectory>
+    </PropertyGroup>
+</Project>
+```
