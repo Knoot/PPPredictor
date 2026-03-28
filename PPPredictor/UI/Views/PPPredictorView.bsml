@@ -37,6 +37,7 @@
       </horizontal>
       <!-- /Buttons -->
       <vertical horizontal-fit='PreferredSize' preferred-width='60' vertical-fit='PreferredSize' anchor-pos-y='-1'>
+        <text text='Bi ba butzemann bin auf linux gebaut' align='Left' font-size='4' />
         <horizontal horizontal-fit='PreferredSize' pad-left='0' align='Center' child-align='MiddleLeft'>
           <vertical vertical-fit='PreferredSize' child-align='MiddleLeft'>
             <text text='Global' align='Left' font-size='4' />

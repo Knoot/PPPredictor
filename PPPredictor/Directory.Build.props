@@ -5,4 +5,7 @@
 		<ImportBSMTTargets>True</ImportBSMTTargets>
 		<BSMTProjectType>BSIPA</BSMTProjectType>
 	</PropertyGroup>
+	<PropertyGroup>
+		<GameDirectory>/var/home/nub/.local/share/Steam/steamapps/common/Beat Saber</GameDirectory>
+	</PropertyGroup>
 </Project>
