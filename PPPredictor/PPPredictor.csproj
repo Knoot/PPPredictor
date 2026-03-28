@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net48</TargetFramework>
         <Configurations>Debug;Release;DEBUG Test;Debug ACCSABERNETWORK;Debug BEATLEADERNETWORK;Debug SCORESABERNETWORK;Debug HITBLOQNETWORK;Debug ALLNETWORK</Configurations>
@@ -26,9 +26,6 @@
         <Compile Include="..\PPPredictor.Core\PPPredictor.Core\**\*.cs" Link="Core\%(RecursiveDir)%(FileName)%(Extension)" />
         <Compile Remove="..\PPPredictor.Core\obj\**\*;..\PPPredictor.Core\**\obj\**\*" />
         <Compile Remove="..\PPPredictor.Core\**\AssemblyInfo.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.5.0-beta.2" PrivateAssets="all" />
     </ItemGroup>
     <ItemGroup>
       <Reference Include="0Harmony">
@@ -152,10 +149,13 @@
       <None Remove="Resources\moveIcon.png" />
       <EmbeddedResource Include="Resources\moveIcon.png" />
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
     <Target Name="CopyPlugin" AfterTargets="Build">
-      <Copy
-              SourceFiles="$(TargetPath)"
-              DestinationFolder="$(GameDirectory)\Plugins\"
-              SkipUnchangedFiles="false" />
+      <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Plugins\" SkipUnchangedFiles="false" />
     </Target>
 </Project>
