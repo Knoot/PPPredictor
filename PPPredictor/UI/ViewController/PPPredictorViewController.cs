@@ -499,7 +499,7 @@ namespace PPPredictor.UI.ViewController
         [UIValue("movePanelIcon")]
         private string MovePanelIcon
         {
-            get => _isScreenMoving ? "🔓" : "🔒";
+            get => _isScreenMoving ? "PPPredictor.Resources.gIconLockOpen.png" : "PPPredictor.Resources.gIconLockClosed.png";
         }
         #endregion
         internal void ResetDisplay(bool v)

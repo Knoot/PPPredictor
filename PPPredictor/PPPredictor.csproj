@@ -148,6 +148,14 @@
       <EmbeddedResource Include="Resources\icon.png" />
       <None Remove="Resources\moveIcon.png" />
       <EmbeddedResource Include="Resources\moveIcon.png" />
+      <None Remove="Resources\gIconLockClosed.png" />
+      <EmbeddedResource Include="Resources\gIconLockClosed.png" />
+      <None Remove="Resources\gIconLockOpen.png" />
+      <EmbeddedResource Include="Resources\gIconLockOpen.png" />
+      <None Remove="Resources\gIconRefresh.png" />
+      <EmbeddedResource Include="Resources\gIconRefresh.png" />
+      <None Remove="Resources\gIconTrash.png" />
+      <EmbeddedResource Include="Resources\gIconTrash.png" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
