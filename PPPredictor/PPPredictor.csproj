@@ -164,9 +164,9 @@
     <Company>No.1 N[][]b</Company>
     <Product>PPPredictor</Product>
     <Copyright>Copyright © 2026</Copyright>
-    <AssemblyVersion>1.2.1</AssemblyVersion>
-    <FileVersion>1.2.1</FileVersion>
-    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.2</AssemblyVersion>
+    <FileVersion>1.2.2</FileVersion>
+    <Version>1.2.2</Version>
     <ComVisible>false</ComVisible>
   </PropertyGroup>
 </Project>
