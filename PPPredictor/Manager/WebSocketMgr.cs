@@ -23,17 +23,24 @@ namespace PPPredictor.WebSocket
             RestartOverlayServer();
         }
 
-        public void CreateScoreWebSockets()
+        public async void CreateScoreWebSockets()
         {
             if (Plugin.ProfileInfo.IsScoreSaberEnabled)
             {
-                PPPWebSocket<PPPWsScoreSaberCommand> socket = new PPPWebSocket<PPPWsScoreSaberCommand>("wss://scoresaber.com/ws", Leaderboard.ScoreSaber.ToString());
-                socket.OnScoreSet += PPPWebsocket_OnScoreSet;
-                _lsWebSockets.Add(socket);
+                FUUUUUUUUUUUUCK
+                // PPPWebSocket<PPPWsScoreSaberCommand> socket = new PPPWebSocket<PPPWsScoreSaberCommand>("wss://scoresaber.com/ws", Leaderboard.ScoreSaber.ToString());
+                // socket.OnScoreSet += PPPWebsocket_OnScoreSet;
+                // _lsWebSockets.Add(socket);
             }
             if (Plugin.ProfileInfo.IsBeatLeaderEnabled)
             {
                 PPPWebSocket<PPPWsBeatLeaderData> socket = new PPPWebSocket<PPPWsBeatLeaderData>("wss://sockets.api.beatleader.com/scores", Leaderboard.BeatLeader.ToString());
+                socket.OnScoreSet += PPPWebsocket_OnScoreSet;
+                _lsWebSockets.Add(socket);
+            }
+            if (Plugin.ProfileInfo.IsAccSaberReloadedEnabled)
+            {
+                PPPWebSocket<PPPWsAccSaberReloadedData> socket = new PPPWebSocket<PPPWsAccSaberReloadedData>("wss://accsaberreloaded.com/ws/scores", Leaderboard.AccSaberReloaded.ToString());
                 socket.OnScoreSet += PPPWebsocket_OnScoreSet;
                 _lsWebSockets.Add(socket);
             }
@@ -61,7 +68,7 @@ namespace PPPredictor.WebSocket
         {
             await Task.Delay(5000);
             _ppPredictorMgr.ScoreSet(leaderboard.ToString(), data);
-            dctWaitingRefresh.Remove(data.hash);
+            dctWaitingRefresh.Remove($"{leaderboard}_{data.hash}");
         }
 
         internal void RestartOverlayServer()

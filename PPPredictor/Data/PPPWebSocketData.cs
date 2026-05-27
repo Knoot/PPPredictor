@@ -1,12 +1,15 @@
-﻿using PPPredictor.Core.DataType;
+﻿using PPPredictor.Core;
+using PPPredictor.Core.DataType;
 using PPPredictor.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace PPPredictor.Data
 {
     #region scoresaber
     class PPPWsScoreSaberCommand : IPPPRawWebsocketData
     {
-        public PPPWsScoreSaberData commandData;
+        public PPPWsScoreSaberData commandData { get; set; }
 
         public PPPScoreSetData ConvertToPPPWebSocketData(string leaderboardName)
         {
@@ -20,32 +23,31 @@ namespace PPPredictor.Data
 
     class PPPWsScoreSaberData
     {
-        public PPPWsScoreSaberScore score;
-        public PPPWsScoreSaberLeaderBoard leaderboard;
+        public PPPWsScoreSaberScore score { get; set; }
+        public PPPWsScoreSaberLeaderBoard leaderboard { get; set; }
     }
 
     class PPPWsScoreSaberLeaderBoard
     {
-        public string songHash;
-        public PPPWsScoreSaberDifficulty difficulty;
+        public string songHash { get; set; }
+        public PPPWsScoreSaberDifficulty difficulty { get; set; }
     }
 
     class PPPWsScoreSaberDifficulty
     {
-        public int difficulty;
-        public string gameMode;
-        public string difficultyRaw;
+        public int difficulty { get; set; }
+        public string gameMode { get; set; }
     }
 
     class PPPWsScoreSaberScore
     {
-        public double pp;
-        public WebSocketScoreCommandPlayerInfo leaderboardPlayerInfo;
+        public double pp { get; set; }
+        public WebSocketScoreCommandPlayerInfo leaderboardPlayerInfo { get; set; }
     }
 
     class WebSocketScoreCommandPlayerInfo
     {
-        public string id;
+        public string id { get; set; }
     }
     #endregion
 
@@ -81,7 +83,7 @@ namespace PPPredictor.Data
         public PPPWsBeatLeaderSong song { get; set; }
 
 
-        public PPPWsBeatLeaderDifficulty difficulty;
+        public PPPWsBeatLeaderDifficulty difficulty { get; set; }
     }
 
     class PPPWsBeatLeaderSong
@@ -97,6 +99,24 @@ namespace PPPredictor.Data
         public string difficultyName { get; set; }
 
         public string modeName { get; set; }
+    }
+    #endregion
+
+    #region AccSaberReloaded
+    class PPPWsAccSaberReloadedData : IPPPRawWebsocketData
+    {
+        public string userId { get; set; }
+        public string songHash { get; set; }
+        public string difficulty { get; set; }
+
+        public PPPScoreSetData ConvertToPPPWebSocketData(string leaderboardName)
+        {
+            var data = new PPPScoreSetData();
+            data.leaderboardName = leaderboardName;
+            data.userId = userId;
+            data.hash = $"{songHash}_SoloStandard_{ParsingUtil.ParseDifficultyNameToInt(difficulty)}".ToUpper();
+            return data;
+        }
     }
     #endregion
 }

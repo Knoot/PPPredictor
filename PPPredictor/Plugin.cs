@@ -128,6 +128,10 @@ namespace PPPredictor
                 case Leaderboard.HitBloq:
                     break;
 #endif
+#if ACCSABERRELOADEDNETWORK
+                case Leaderboard.AccSaberReloaded:
+                    break;
+#endif
                 default:
                     return;
             }

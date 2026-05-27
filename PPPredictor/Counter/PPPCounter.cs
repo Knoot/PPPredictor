@@ -112,6 +112,7 @@ namespace PPPredictor.Counter
             CreateCounterInfoHolder(Leaderboard.BeatLeader, gamePlayInfo, canvas, positionScale, ref lineOffset, ref id);
             CreateCounterInfoHolder(Leaderboard.HitBloq, gamePlayInfo, canvas, positionScale, ref lineOffset, ref id);
             CreateCounterInfoHolder(Leaderboard.AccSaber, gamePlayInfo, canvas, positionScale, ref lineOffset, ref id);
+            CreateCounterInfoHolder(Leaderboard.AccSaberReloaded, gamePlayInfo, canvas, positionScale, ref lineOffset, ref id);
             _isCounterCreated = true;
         }
 

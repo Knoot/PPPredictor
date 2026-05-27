@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net48</TargetFramework>
-        <Configurations>Debug;Release;DEBUG Test;Debug ACCSABERNETWORK;Debug BEATLEADERNETWORK;Debug SCORESABERNETWORK;Debug HITBLOQNETWORK;Debug ALLNETWORK</Configurations>
+        <Configurations>Debug;Release;DEBUG Test;Debug ACCSABERNETWORK;Debug BEATLEADERNETWORK;Debug SCORESABERNETWORK;Debug HITBLOQNETWORK;Debug ALLNETWORK;ACCSABERRELOADEDNETWORK</Configurations>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug ACCSABERNETWORK' ">
@@ -17,7 +17,10 @@
       <DefineConstants>TRACE;DEBUG;SCORESABERNETWORK</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug ALLNETWORK' ">
-      <DefineConstants>TRACE;DEBUG;ACCSABERNETWORK;BEATLEADERNETWORK;HITBLOQNETWORK;SCORESABERNETWORK</DefineConstants>
+      <DefineConstants>TRACE;DEBUG;ACCSABERNETWORK;BEATLEADERNETWORK;HITBLOQNETWORK;SCORESABERNETWORK;ACCSABERRELOADEDNETWORK</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'ACCSABERRELOADEDNETWORK' ">
+      <DefineConstants>TRACE;ACCSABERRELOADEDNETWORK</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
         <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
@@ -156,6 +159,8 @@
       <EmbeddedResource Include="Resources\gIconRefresh.png" />
       <None Remove="Resources\gIconTrash.png" />
       <EmbeddedResource Include="Resources\gIconTrash.png" />
+      <None Remove="Resources\LeaderBoardLogos\AccSaberReloaded.png" />
+      <EmbeddedResource Include="Resources\LeaderBoardLogos\AccSaberReloaded.png" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">

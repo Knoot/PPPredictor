@@ -45,7 +45,9 @@ namespace PPPredictor.Data
         private bool _isBeatLeaderEnabled;
         private bool _isHitBloqEnabled;
         private bool _isAccSaberEnabled;
+        private bool _isAccSaberReloadedEnabled;
         private bool _isAccSaberEnabledManual;
+        private bool _isAccSaberReloadedEnabledManual;
 
         private string _streamOverlayPort;
         private PPGainCalculationType _ppGainCalculationType;
@@ -118,6 +120,8 @@ namespace PPPredictor.Data
         public bool IsHitBloqEnabled { get => _isHitBloqEnabled; set => _isHitBloqEnabled = value; }
         [JsonIgnore]
         public bool IsAccSaberEnabled { get => _isAccSaberEnabled; set => _isAccSaberEnabled = value; }
+        [JsonIgnore]
+        public bool IsAccSaberReloadedEnabled { get => _isAccSaberReloadedEnabled; set => _isAccSaberReloadedEnabled = value; }
         public PPGainCalculationType PpGainCalculationType { get => _ppGainCalculationType; set => _ppGainCalculationType = value; }
         public int RawPPLossHighlightThreshold { get => _rawPPLossHighlightThreshold; set => _rawPPLossHighlightThreshold = value; }
         public CounterDisplayType CounterDisplayType { get => _counterDisplayType; set => _counterDisplayType = value; }
@@ -130,6 +134,7 @@ namespace PPPredictor.Data
         public float LastMaxPercentageSelected { get => _lastMaxPercentageSelected; set => _lastMaxPercentageSelected = value; }
         public string StreamOverlayPort { get => _streamOverlayPort; set => _streamOverlayPort = value; }
         public bool IsAccSaberEnabledManual { get => _isAccSaberEnabledManual; set => _isAccSaberEnabledManual = value; }
+        public bool IsAccSaberReloadedEnabledManual { get => _isAccSaberReloadedEnabledManual; set => _isAccSaberReloadedEnabledManual = value; }
         public Dictionary<string, LeaderboardData> DctleaderBoardData { get => _dctleaderBoardData; set => _dctleaderBoardData = value; }
         public Dictionary<string, string> MapPoolSelection { get => _mapPoolSelection; set => _mapPoolSelection = value; }
         [JsonIgnore]
@@ -153,13 +158,13 @@ namespace PPPredictor.Data
                     IsBeatLeaderEnabled,
                     IsHitBloqEnabled,
                     IsAccSaberEnabled,
+                    IsAccSaberReloadedEnabled,
                     (await Plugin.GetUserInfoBS()).platformUserId,
                     PpGainCalculationType,
                     HitbloqMapPoolSorting,
                     //Plugin.ProfileInfo.platformUserId,
                     "",
                     RefetchMapInfoAfterDays,
-                    LastSessionReset,
                     ResetSessionHours
                 );
         }
