@@ -160,10 +160,10 @@ namespace PPPredictor.Utilities
         {
             List<PluginMetadata> lsEnabledPlugin = PluginManager.EnabledPlugins.ToList();
             Plugin.ProfileInfo.IsScoreSaberEnabled = lsEnabledPlugin.FirstOrDefault(x => x.Name == Leaderboard.ScoreSaber.ToString()) != null;
-            Plugin.ProfileInfo.IsBeatLeaderEnabled = false; // lsEnabledPlugin.FirstOrDefault(x => x.Name == Leaderboard.BeatLeader.ToString()) != null;
-            Plugin.ProfileInfo.IsHitBloqEnabled = false;//lsEnabledPlugin.FirstOrDefault(x => x.Name == CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Leaderboard.HitBloq.ToString())) != null;
-            Plugin.ProfileInfo.IsAccSaberEnabled = false; //Plugin.ProfileInfo.IsScoreSaberEnabled && Plugin.ProfileInfo.IsAccSaberEnabledManual;
-            Plugin.ProfileInfo.IsAccSaberReloadedEnabled = false; //(Plugin.ProfileInfo.IsBeatLeaderEnabled || Plugin.ProfileInfo.IsScoreSaberEnabled) && Plugin.ProfileInfo.IsAccSaberReloadedEnabledManual;
+            Plugin.ProfileInfo.IsBeatLeaderEnabled = lsEnabledPlugin.FirstOrDefault(x => x.Name == Leaderboard.BeatLeader.ToString()) != null;
+            Plugin.ProfileInfo.IsHitBloqEnabled = lsEnabledPlugin.FirstOrDefault(x => x.Name == CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Leaderboard.HitBloq.ToString())) != null;
+            Plugin.ProfileInfo.IsAccSaberEnabled = Plugin.ProfileInfo.IsScoreSaberEnabled && Plugin.ProfileInfo.IsAccSaberEnabledManual;
+            Plugin.ProfileInfo.IsAccSaberReloadedEnabled = (Plugin.ProfileInfo.IsBeatLeaderEnabled || Plugin.ProfileInfo.IsScoreSaberEnabled) && Plugin.ProfileInfo.IsAccSaberReloadedEnabledManual;
         }
 
         public void RestartOverlayServer()

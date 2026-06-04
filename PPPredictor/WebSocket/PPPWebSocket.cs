@@ -51,7 +51,7 @@ namespace PPPredictor.WebSocket
                     webSocket = socket;
                 }
 
-                socket.Connect();
+                socket.ConnectAsync();
                 StartKeepAlive();
             }
             catch (Exception ex)

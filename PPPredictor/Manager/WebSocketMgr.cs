@@ -27,10 +27,9 @@ namespace PPPredictor.WebSocket
         {
             if (Plugin.ProfileInfo.IsScoreSaberEnabled)
             {
-                FUUUUUUUUUUUUCK
-                // PPPWebSocket<PPPWsScoreSaberCommand> socket = new PPPWebSocket<PPPWsScoreSaberCommand>("wss://scoresaber.com/ws", Leaderboard.ScoreSaber.ToString());
-                // socket.OnScoreSet += PPPWebsocket_OnScoreSet;
-                // _lsWebSockets.Add(socket);
+                PPPWebSocket<PPPWsScoreSaberCommand> socket = new PPPWebSocket<PPPWsScoreSaberCommand>("wss://scoresaber.com/ws", Leaderboard.ScoreSaber.ToString());
+                socket.OnScoreSet += PPPWebsocket_OnScoreSet;
+                _lsWebSockets.Add(socket);
             }
             if (Plugin.ProfileInfo.IsBeatLeaderEnabled)
             {
