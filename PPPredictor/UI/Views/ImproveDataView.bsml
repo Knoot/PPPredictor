@@ -1,0 +1,16 @@
+<vertical vertical-fit='PreferredSize' preferred-width='55' bg='panel-top' pad-top='1' pad-bottom='1' spacing='1' child-align='MiddleCenter' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <horizontal horizontal-fit='PreferredSize' align='Right' child-align='MiddleRight' preferred-width='50' spacing='1'>
+    <button text='~improveDataMovePanelIcon' hover-hint='Lock or unlock improve data panel movement' on-click='move-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
+    <button text='⌁' hover-hint='Attach improve data panel to the main panel' on-click='attach-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
+  </horizontal>
+  <vertical vertical-fit='PreferredSize' preferred-width='50' child-align='MiddleLeft' spacing='1'>
+    <horizontal horizontal-fit='PreferredSize' align='Left' child-align='MiddleLeft' spacing='1'>
+      <image src='~scoreSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
+      <text text='~scoreSaberImproveData' italics='true' align='Left' font-size='3.5' />
+    </horizontal>
+    <horizontal horizontal-fit='PreferredSize' align='Left' child-align='MiddleLeft' spacing='1'>
+      <image src='~beatLeaderImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
+      <text text='~beatLeaderImproveData' italics='true' align='Left' font-size='3.5' />
+    </horizontal>
+  </vertical>
+</vertical>

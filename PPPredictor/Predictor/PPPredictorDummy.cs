@@ -30,6 +30,7 @@ namespace PPPredictor.Utilities
         public event EventHandler<bool> OnDataLoading;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         public event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
+        public event EventHandler<DisplayImproveInfo> OnDisplayImproveInfo;
         public event EventHandler OnMapPoolRefreshed;
 #pragma warning restore CS0067
 

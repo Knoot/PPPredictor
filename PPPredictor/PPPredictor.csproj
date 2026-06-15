@@ -132,6 +132,8 @@
       <EmbeddedResource Include="manifest.json" />
       <None Remove="UI\Views\PPPredictorView.bsml" />
       <EmbeddedResource Include="UI\Views\PPPredictorView.bsml" />
+      <None Remove="UI\Views\ImproveDataView.bsml" />
+      <EmbeddedResource Include="UI\Views\ImproveDataView.bsml" />
       <None Remove="UI\Views\SettingsMidView.bsml" />
       <EmbeddedResource Include="UI\Views\SettingsMidView.bsml" />
       <None Remove="Resources\LeaderBoardLogos\AccSaber.png" />

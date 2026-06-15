@@ -17,6 +17,7 @@ using HarmonyLib;
 using System.Threading.Tasks;
 using PPPredictor.Interfaces;
 using PPPredictor.Core.DataType.MapPool;
+using static PPPredictor.Core.DataType.Enums;
 
 namespace PPPredictor.UI.ViewController
 {
@@ -26,6 +27,7 @@ namespace PPPredictor.UI.ViewController
     {
         private static readonly string githubUrl = "https://github.com/no-1-noob/PPPredictor/releases/latest";
         private FloatingScreen floatingScreen;
+        private FloatingScreen improveDataFloatingScreen;
 #pragma warning disable CS0649
         [Inject] private readonly IPPPredictorMgr ppPredictorMgr;
 #pragma warning restore CS0649
@@ -34,6 +36,11 @@ namespace PPPredictor.UI.ViewController
         private DisplayPPInfo displayPPInfo;
         private bool _isDataLoading;
         private bool _isScreenMoving = false;
+        private bool _isImproveDataScreenMoving = false;
+        private bool _isParsingImproveDataView = false;
+        private string _scoreSaberImproveData = string.Empty;
+        private string _beatLeaderImproveData = string.Empty;
+        private readonly HashSet<string> _loadingImproveDataLeaderboards = new HashSet<string>();
         private List<Action> _lsPropertyChangedActions = new List<Action>();
 
         public PPPredictorViewController() { }
@@ -58,21 +65,43 @@ namespace PPPredictor.UI.ViewController
             floatingScreen.Handle.hideFlags = HideFlags.HideInHierarchy;
             floatingScreen.ShowHandle = _isScreenMoving;
             floatingScreen.HighlightHandle = false;
-            SetupHandleTexture();
+            SetupHandleTexture(floatingScreen);
+
+            improveDataFloatingScreen = FloatingScreen.CreateFloatingScreen(new Vector2(55, 24), true, Plugin.ProfileInfo.ImproveDataPosition, new Quaternion(0, 0, 0, 0));
+            improveDataFloatingScreen.gameObject.name = "BSMLFloatingScreen_PPPredictorImproveData";
+            improveDataFloatingScreen.gameObject.SetActive(false);
+            improveDataFloatingScreen.transform.eulerAngles = Plugin.ProfileInfo.ImproveDataEulerAngles;
+            improveDataFloatingScreen.transform.localScale = new Vector3(0.03f, 0.03f, 0.03f);
+            improveDataFloatingScreen.Handle.transform.localScale = new Vector2(18, 18);
+            improveDataFloatingScreen.Handle.transform.localPosition = new Vector3(0, 1, -.1f);
+            improveDataFloatingScreen.Handle.transform.localRotation = Quaternion.identity;
+            improveDataFloatingScreen.Handle.hideFlags = HideFlags.HideInHierarchy;
+            improveDataFloatingScreen.ShowHandle = _isImproveDataScreenMoving;
+            improveDataFloatingScreen.HighlightHandle = false;
+            SetupHandleTexture(improveDataFloatingScreen);
+            if (Plugin.ProfileInfo.IsImproveDataPanelAttached)
+            {
+                AttachImproveDataPanelToMain();
+            }
 
             floatingScreen.HandleReleased += OnScreenHandleReleased;
+            improveDataFloatingScreen.HandleReleased += OnImproveDataScreenHandleReleased;
             BSMLParser.Instance.Initialize();
             BSMLParser.Instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "PPPredictor.UI.Views.PPPredictorView.bsml"), floatingScreen.gameObject, this);
+            _isParsingImproveDataView = true;
+            BSMLParser.Instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "PPPredictor.UI.Views.ImproveDataView.bsml"), improveDataFloatingScreen.gameObject, this);
+            _isParsingImproveDataView = false;
             ppPredictorMgr.ViewActivated += PpPredictorMgr_ViewActivated;
             ppPredictorMgr.OnDataLoading += PpPredictorMgr_OnDataLoading;
             ppPredictorMgr.OnDisplayPPInfo += PpPredictorMgr_OnDisplayPPInfo;
+            ppPredictorMgr.OnDisplayImproveInfo += PpPredictorMgr_OnDisplayImproveInfo;
             ppPredictorMgr.OnDisplaySessionInfo += PpPredictorMgr_OnDisplaySessionInfo;
             ppPredictorMgr.OnMapPoolRefreshed += PpPredictorMgr_OnMapPoolRefreshed;
         }
 
-        private async void SetupHandleTexture()
+        private async void SetupHandleTexture(FloatingScreen screen)
         {
-            MeshRenderer floatingScreenMeshRenderer = floatingScreen.Handle.GetComponent<MeshRenderer>();
+            MeshRenderer floatingScreenMeshRenderer = screen.Handle.GetComponent<MeshRenderer>();
             Shader unlitShader = Shader.Find("Sprites/Default");
             var material = new Material(unlitShader);
             floatingScreenMeshRenderer.material = material;
@@ -97,6 +126,29 @@ namespace PPPredictor.UI.ViewController
             UpdatePPDisplay();
         }
 
+        private void PpPredictorMgr_OnDisplayImproveInfo(object sender, DisplayImproveInfo displayImproveInfo)
+        {
+            if (displayImproveInfo.LeaderboardName == Leaderboard.ScoreSaber.ToString())
+            {
+                _scoreSaberImproveData = displayImproveInfo.Text;
+            }
+            else if (displayImproveInfo.LeaderboardName == Leaderboard.BeatLeader.ToString())
+            {
+                _beatLeaderImproveData = displayImproveInfo.Text;
+            }
+
+            if (displayImproveInfo.IsLoading)
+            {
+                _loadingImproveDataLeaderboards.Add(displayImproveInfo.LeaderboardName);
+            }
+            else
+            {
+                _loadingImproveDataLeaderboards.Remove(displayImproveInfo.LeaderboardName);
+            }
+
+            UpdateImproveDataDisplay();
+        }
+
         private void PpPredictorMgr_OnDataLoading(object sender, bool isDataLoading)
         {
             this._isDataLoading = isDataLoading;
@@ -114,12 +166,26 @@ namespace PPPredictor.UI.ViewController
         {
             Plugin.ProfileInfo.Position = floatingScreen.transform.position;
             Plugin.ProfileInfo.EulerAngles = floatingScreen.transform.eulerAngles;
+            if (Plugin.ProfileInfo.IsImproveDataPanelAttached)
+            {
+                AttachImproveDataPanelToMain();
+            }
+        }
+
+        public void OnImproveDataScreenHandleReleased(object sender, FloatingScreenHandleEventArgs args)
+        {
+            Plugin.ProfileInfo.IsImproveDataPanelAttached = false;
+            Plugin.ProfileInfo.ImproveDataPosition = improveDataFloatingScreen.transform.position;
+            Plugin.ProfileInfo.ImproveDataEulerAngles = improveDataFloatingScreen.transform.eulerAngles;
+            UpdateImproveDataPanelMovementDisplay();
         }
 
         public void Dispose()
         {
             floatingScreen.HandleReleased -= OnScreenHandleReleased;
+            improveDataFloatingScreen.HandleReleased -= OnImproveDataScreenHandleReleased;
             ppPredictorMgr.ViewActivated -= PpPredictorMgr_ViewActivated;
+            ppPredictorMgr.OnDisplayImproveInfo -= PpPredictorMgr_OnDisplayImproveInfo;
             if (tabSelector) tabSelector.TextSegmentedControl.didSelectCellEvent -= OnSelectedCellEventChanged;
             Plugin.pppViewController = null;
         }
@@ -131,6 +197,11 @@ namespace PPPredictor.UI.ViewController
         [UIAction("#post-parse")]
         protected void PostParse()
         {
+            if (_isParsingImproveDataView)
+            {
+                return;
+            }
+
             ResetPosition();
             DisplayInitialPercentages();
             this.ppPredictorMgr.ResetDisplay(false);
@@ -322,6 +393,11 @@ namespace PPPredictor.UI.ViewController
         {
             get => displayPPInfo.PPGainDiffColor;
         }
+        [UIValue("improveData")]
+        private string ImproveData
+        {
+            get => displayPPInfo.ImproveData;
+        }
         #region UI Values session
         [UIValue("sessionRank")]
         private string SessionRank
@@ -450,6 +526,15 @@ namespace PPPredictor.UI.ViewController
         {
             get => this.ppPredictorMgr.IsLeaderboardNavigationActive;
         }
+        [UIValue("isImproveDataVisible")]
+        private bool IsImproveDataVisible
+        {
+            get
+            {
+                string leaderBoardName = this.ppPredictorMgr.CurrentPPPredictor.LeaderBoardName;
+                return leaderBoardName == Leaderboard.BeatLeader.ToString() || leaderBoardName == Leaderboard.ScoreSaber.ToString();
+            }
+        }
         #region update UI data
         [UIValue("newVersion")]
         private string NewVersion { get; set; }
@@ -502,6 +587,74 @@ namespace PPPredictor.UI.ViewController
             get => _isScreenMoving ? "🔓" : "🔒";
         }
         #endregion
+
+        #region improve data panel
+        [UIAction("move-improve-data-panel-clicked")]
+        private void MoveImproveDataPanelClicked()
+        {
+            _isImproveDataScreenMoving = !_isImproveDataScreenMoving;
+            if (_isImproveDataScreenMoving)
+            {
+                Plugin.ProfileInfo.IsImproveDataPanelAttached = false;
+            }
+            improveDataFloatingScreen.ShowHandle = _isImproveDataScreenMoving;
+            UpdateImproveDataPanelMovementDisplay();
+        }
+
+        [UIAction("attach-improve-data-panel-clicked")]
+        private void AttachImproveDataPanelClicked()
+        {
+            Plugin.ProfileInfo.IsImproveDataPanelAttached = true;
+            _isImproveDataScreenMoving = false;
+            improveDataFloatingScreen.ShowHandle = false;
+            AttachImproveDataPanelToMain();
+            UpdateImproveDataPanelMovementDisplay();
+        }
+
+        [UIValue("improveDataMovePanelIcon")]
+        private string ImproveDataMovePanelIcon
+        {
+            get => _isImproveDataScreenMoving ? "🔓" : "🔒";
+        }
+
+        [UIValue("scoreSaberImproveData")]
+        private string ScoreSaberImproveData
+        {
+            get => string.IsNullOrEmpty(_scoreSaberImproveData) ? "-" : _scoreSaberImproveData;
+        }
+
+        [UIValue("beatLeaderImproveData")]
+        private string BeatLeaderImproveData
+        {
+            get => string.IsNullOrEmpty(_beatLeaderImproveData) ? "-" : _beatLeaderImproveData;
+        }
+
+        [UIValue("scoreSaberImproveDataIcon")]
+        private string ScoreSaberImproveDataIcon
+        {
+            get => "PPPredictor.Resources.LeaderBoardLogos.ScoreSaber.png";
+        }
+
+        [UIValue("beatLeaderImproveDataIcon")]
+        private string BeatLeaderImproveDataIcon
+        {
+            get => "PPPredictor.Resources.LeaderBoardLogos.BeatLeader.png";
+        }
+
+        private void AttachImproveDataPanelToMain()
+        {
+            if (floatingScreen == null || improveDataFloatingScreen == null)
+            {
+                return;
+            }
+
+            improveDataFloatingScreen.transform.eulerAngles = floatingScreen.transform.eulerAngles;
+            improveDataFloatingScreen.transform.position = floatingScreen.transform.position + floatingScreen.transform.right * 2.1f;
+            Plugin.ProfileInfo.ImproveDataPosition = improveDataFloatingScreen.transform.position;
+            Plugin.ProfileInfo.ImproveDataEulerAngles = improveDataFloatingScreen.transform.eulerAngles;
+        }
+        #endregion
+
         internal void ResetDisplay(bool v)
         {
             ResetPosition();
@@ -513,6 +666,7 @@ namespace PPPredictor.UI.ViewController
         {
             RefreshTabSelection();
             floatingScreen.gameObject.SetActive(active);
+            improveDataFloatingScreen.gameObject.SetActive(active);
             if (active)
             {
                 foreach (var action in _lsPropertyChangedActions)
@@ -550,6 +704,15 @@ namespace PPPredictor.UI.ViewController
         {
             floatingScreen.transform.eulerAngles = Plugin.ProfileInfo.EulerAngles;
             floatingScreen.transform.position = Plugin.ProfileInfo.Position;
+            if (Plugin.ProfileInfo.IsImproveDataPanelAttached)
+            {
+                AttachImproveDataPanelToMain();
+            }
+            else
+            {
+                improveDataFloatingScreen.transform.eulerAngles = Plugin.ProfileInfo.ImproveDataEulerAngles;
+                improveDataFloatingScreen.transform.position = Plugin.ProfileInfo.ImproveDataPosition;
+            }
         }
 
         private async void CheckVersion()
@@ -632,6 +795,7 @@ namespace PPPredictor.UI.ViewController
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPRaw)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPGain)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PPGainDiffColor)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImproveData)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRank)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRankDiff)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PredictedRankDiffColor)));
@@ -655,6 +819,7 @@ namespace PPPredictor.UI.ViewController
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRightArrowActive)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLeaderboardNavigationActive)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMapPoolDropDownActive)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsImproveDataVisible)));
         }
 
         private void UpdateLoadingDisplay()
@@ -665,6 +830,29 @@ namespace PPPredictor.UI.ViewController
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDataLoading)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNoDataLoading)));
+        }
+
+        private void UpdateImproveDataDisplay()
+        {
+            StartCoroutine(UpdateImproveDataDisplayInternal);
+        }
+
+        private void UpdateImproveDataDisplayInternal()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreSaberImproveData)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BeatLeaderImproveData)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreSaberImproveDataIcon)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BeatLeaderImproveDataIcon)));
+        }
+
+        private void UpdateImproveDataPanelMovementDisplay()
+        {
+            StartCoroutine(UpdateImproveDataPanelMovementDisplayInternal);
+        }
+
+        private void UpdateImproveDataPanelMovementDisplayInternal()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImproveDataMovePanelIcon)));
         }
 
         private void StartCoroutine(Action methodToExecute)
@@ -694,6 +882,7 @@ namespace PPPredictor.UI.ViewController
             UpdateLeaderBoardDisplay();
             UpdateSessionDisplay();
             UpdatePPDisplay();
+            UpdateImproveDataDisplay();
 
         }
     }

@@ -35,6 +35,7 @@ namespace PPPredictor.Utilities
         private readonly CalculatorInstance calculatorInstance;
         private PPPMapPoolShort currentMapPool;
         private List<PPPMapPoolShort> lsMapPools = new List<PPPMapPoolShort>();
+        private const double ImproveDataTargetWeightedPP = 1d;
         #endregion
 
         public string LeaderBoardName
@@ -68,6 +69,7 @@ namespace PPPredictor.Utilities
         public event EventHandler<bool> OnDataLoading;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         public event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
+        public event EventHandler<DisplayImproveInfo> OnDisplayImproveInfo;
         public event EventHandler OnMapPoolRefreshed;
 
         #region
@@ -184,6 +186,21 @@ namespace PPPredictor.Utilities
         {
             if(_isActive) OnDisplayPPInfo?.Invoke(this, displayPPInfo);
         }
+        private void SendImproveDataLoadingProgress(int loadedScores, int totalScores)
+        {
+            if (!HasImproveData())
+            {
+                return;
+            }
+
+            _ppDisplay.ImproveData = $"{LeaderBoardName}: {loadedScores:N0}/{totalScores:N0}";
+            SendDisplayImproveInfo(_ppDisplay.ImproveData, true);
+            SendDisplayPPInfo(_ppDisplay);
+        }
+        private void SendDisplayImproveInfo(string text, bool isLoading)
+        {
+            if (HasImproveData()) OnDisplayImproveInfo?.Invoke(this, new DisplayImproveInfo(LeaderBoardName, text, isLoading));
+        }
         private void SendDisplaySessionInfo(DisplaySessionInfo displaySessionInfo)
         {
             if (_isActive) OnDisplaySessionInfo?.Invoke(this, displaySessionInfo);
@@ -266,11 +283,118 @@ namespace PPPredictor.Utilities
             }
             _ppDisplay.PPGain = $"{ppGains:+0.##;-0.##;0}{PPSuffix}";
             _ppDisplay.PPGainDiffColor = DisplayHelper.GetDisplayColor(ppGains, false, true);
+            _ppDisplay.ImproveData = GetImproveDataDisplay();
+            SendDisplayImproveInfo(_ppDisplay.ImproveData, false);
 
             DisplayRankGain(null, _ppDisplay);
             //Restart rank calculation timer
             _rankTimer.Stop();
             _rankTimer.Start();
+        }
+
+        private string GetImproveDataDisplay()
+        {
+            if (!HasImproveData())
+            {
+                return string.Empty;
+            }
+            if (!IsRanked())
+            {
+                return "unranked";
+            }
+
+            double maxPP = CalculateMaxPP();
+            if (maxPP <= 0)
+            {
+                return "unavailable";
+            }
+
+            double? rawPP = FindRawPPForWeightedGain(ImproveDataTargetWeightedPP, maxPP);
+            if (!rawPP.HasValue)
+            {
+                return $"{ImproveDataTargetWeightedPP:F2}{PPSuffix} = >{maxPP:F2}{PPSuffix} (?%)";
+            }
+
+            double? percentage = FindPercentageForRawPP(rawPP.Value);
+            string percentageText = percentage.HasValue ? $"{percentage.Value:F2}%" : "?%";
+            return $"{ImproveDataTargetWeightedPP:F2}{PPSuffix} = {rawPP.Value:F2}{PPSuffix} ({percentageText})";
+        }
+
+        private bool HasImproveData()
+        {
+            return leaderboardName == Leaderboard.BeatLeader || leaderboardName == Leaderboard.ScoreSaber;
+        }
+
+        private double? FindRawPPForWeightedGain(double targetWeightedPP, double maxPP)
+        {
+            if (GetWeightedGainAtRawPP(maxPP) < targetWeightedPP)
+            {
+                return null;
+            }
+
+            double low = 0;
+            double high = maxPP;
+            for (int i = 0; i < 32; i++)
+            {
+                double mid = (low + high) / 2d;
+                if (GetWeightedGainAtRawPP(mid) >= targetWeightedPP)
+                {
+                    high = mid;
+                }
+                else
+                {
+                    low = mid;
+                }
+            }
+
+            return high;
+        }
+
+        private double GetWeightedGainAtRawPP(double rawPP)
+        {
+            return calculatorInstance.GetPlayerScorePPGain(leaderboardName, currentMapPool.Id, _currentBeatMapInfo.SelectedMapSearchString, rawPP).PpGainWeighted;
+        }
+
+        private double? FindPercentageForRawPP(double targetRawPP)
+        {
+            const int scanSteps = 1000;
+            double previousPercentage = 0;
+
+            if (CalculatePPatPercentage(previousPercentage, _currentBeatMapInfo) >= targetRawPP)
+            {
+                return previousPercentage;
+            }
+
+            for (int i = 1; i <= scanSteps; i++)
+            {
+                double percentage = i * 100d / scanSteps;
+                if (CalculatePPatPercentage(percentage, _currentBeatMapInfo) >= targetRawPP)
+                {
+                    return RefinePercentageForRawPP(targetRawPP, previousPercentage, percentage);
+                }
+
+                previousPercentage = percentage;
+            }
+
+            return null;
+        }
+
+        private double RefinePercentageForRawPP(double targetRawPP, double lowPercentage, double highPercentage)
+        {
+            for (int i = 0; i < 24; i++)
+            {
+                double midPercentage = (lowPercentage + highPercentage) / 2d;
+                if (CalculatePPatPercentage(midPercentage, _currentBeatMapInfo) >= targetRawPP)
+                {
+                    highPercentage = midPercentage;
+                }
+                else
+                {
+                    lowPercentage = midPercentage;
+                }
+            }
+
+            return highPercentage;
         }
 
         private async void OnRankTimerElapsed(object sender, ElapsedEventArgs e)
@@ -369,7 +493,7 @@ namespace PPPredictor.Utilities
         {
             await UpdateCurrentAndCheckResetSession(false);
             IsDataLoading(true);
-            await calculatorInstance.GetPlayerScores(leaderboardName, currentMapPool.Id, fetchLength, _leaderboardInfo.LargePageSize, fetchOnePage);
+            await calculatorInstance.GetPlayerScores(leaderboardName, currentMapPool.Id, fetchLength, _leaderboardInfo.LargePageSize, fetchOnePage, SendImproveDataLoadingProgress);
             if (refreshStars) //MapPool change to a pool that has never been selected before;
             {
                 await UpdateCurrentBeatMapInfos();
@@ -389,7 +513,7 @@ namespace PPPredictor.Utilities
         {
             await UpdateCurrentAndCheckResetSession(resetAll);
             IsDataLoading(true);
-            await calculatorInstance.GetPlayerScores(leaderboardName, currentMapPool.Id, 100, 100);
+            await calculatorInstance.GetPlayerScores(leaderboardName, currentMapPool.Id, 100, 100, false, SendImproveDataLoadingProgress);
             CalculatePP();
             IsDataLoading(false);
         }

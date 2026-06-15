@@ -13,5 +13,6 @@ namespace PPPredictor.Data.DisplayInfos
         internal string PredictedCountryRank { get; set; } = string.Empty;
         internal string PredictedCountryRankDiff { get; set; } = string.Empty;
         internal string PredictedCountryRankDiffColor { get; set; } = DisplayHelper.ColorWhite;
+        internal string ImproveData { get; set; } = string.Empty;
     }
 }

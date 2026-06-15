@@ -37,6 +37,7 @@ namespace PPPredictor.Utilities
         public event EventHandler<bool> OnDataLoading;
         public event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         public event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
+        public event EventHandler<DisplayImproveInfo> OnDisplayImproveInfo;
         public event EventHandler OnMapPoolRefreshed;
 
         public IPPPredictor CurrentPPPredictor { get => _currentPPPredictor; }
@@ -99,6 +100,7 @@ namespace PPPredictor.Utilities
                 pPPredictor.Percentage = _percentage;
                 pPPredictor.OnDataLoading += PPPredictor_OnDataLoading;
                 pPPredictor.OnDisplayPPInfo += PPPredictor_OnDisplayPPInfo;
+                pPPredictor.OnDisplayImproveInfo += PPPredictor_OnDisplayImproveInfo;
                 pPPredictor.OnDisplaySessionInfo += PPPredictor_OnDisplaySessionInfo;
                 pPPredictor.OnMapPoolRefreshed += PPPredictor_OnMapPoolRefreshed;
             }
@@ -183,6 +185,11 @@ namespace PPPredictor.Utilities
         private void PPPredictor_OnDisplayPPInfo(object sender, DisplayPPInfo displayPPInfo)
         {
             OnDisplayPPInfo?.Invoke(this, displayPPInfo);
+        }
+
+        private void PPPredictor_OnDisplayImproveInfo(object sender, DisplayImproveInfo displayImproveInfo)
+        {
+            OnDisplayImproveInfo?.Invoke(this, displayImproveInfo);
         }
 
         private void PPPredictor_OnDataLoading(object sender, bool isDataLoading)
@@ -413,6 +420,7 @@ namespace PPPredictor.Utilities
             {
                 pPPredictor.OnDataLoading -= PPPredictor_OnDataLoading;
                 pPPredictor.OnDisplayPPInfo -= PPPredictor_OnDisplayPPInfo;
+                pPPredictor.OnDisplayImproveInfo -= PPPredictor_OnDisplayImproveInfo;
                 pPPredictor.OnDisplaySessionInfo -= PPPredictor_OnDisplaySessionInfo;
                 pPPredictor.OnMapPoolRefreshed -= PPPredictor_OnMapPoolRefreshed;
             }

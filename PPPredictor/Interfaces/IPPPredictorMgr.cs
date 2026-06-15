@@ -23,6 +23,7 @@ namespace PPPredictor.Interfaces
         event EventHandler<bool> OnDataLoading;
         event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
+        event EventHandler<DisplayImproveInfo> OnDisplayImproveInfo;
         event EventHandler OnMapPoolRefreshed;
 
         Task ResetPredictors(bool isConstructor = false);

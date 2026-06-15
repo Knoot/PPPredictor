@@ -32,6 +32,7 @@ namespace PPPredictor.Interfaces
         event EventHandler<bool> OnDataLoading;
         event EventHandler<DisplaySessionInfo> OnDisplaySessionInfo;
         event EventHandler<DisplayPPInfo> OnDisplayPPInfo;
+        event EventHandler<DisplayImproveInfo> OnDisplayImproveInfo;
         event EventHandler OnMapPoolRefreshed;
         float Percentage { get; set; }
         string LeaderBoardName { get; }

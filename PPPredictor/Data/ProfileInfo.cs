@@ -5,6 +5,7 @@ using PPPredictor.Core.DataType.MapPool;
 using PPPredictor.Utilities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using static PPPredictor.Core.DataType.Enums;
@@ -17,6 +18,9 @@ namespace PPPredictor.Data
         private float _lastPercentageSelected;
         private SVector3 _position;
         private SVector3 _eulerAngles;
+        private SVector3 _improveDataPosition;
+        private SVector3 _improveDataEulerAngles;
+        private bool _isImproveDataPanelAttached;
         private bool _displaySessionValues;
         private int _resetSessionHours;
         private DateTime _lastSessionReset;
@@ -57,6 +61,9 @@ namespace PPPredictor.Data
             LastPercentageSelected = 90;
             Position = MenuPositionHelper.UnderScoreboardPosition;
             EulerAngles = MenuPositionHelper.UnderScoreboardEulerAngles;
+            ImproveDataPosition = Position;
+            ImproveDataEulerAngles = EulerAngles;
+            IsImproveDataPanelAttached = true;
             DisplaySessionValues = false;
             ResetSessionHours = 12;
             LastSessionReset = new DateTime();
@@ -98,6 +105,10 @@ namespace PPPredictor.Data
         public float LastPercentageSelected { get => _lastPercentageSelected; set => _lastPercentageSelected = value; }
         public SVector3 Position { get => _position; set => _position = value; }
         public SVector3 EulerAngles { get => _eulerAngles; set => _eulerAngles = value; }
+        public SVector3 ImproveDataPosition { get => _improveDataPosition; set => _improveDataPosition = value; }
+        public SVector3 ImproveDataEulerAngles { get => _improveDataEulerAngles; set => _improveDataEulerAngles = value; }
+        [DefaultValue(true)]
+        public bool IsImproveDataPanelAttached { get => _isImproveDataPanelAttached; set => _isImproveDataPanelAttached = value; }
         public bool DisplaySessionValues { get => _displaySessionValues; set => _displaySessionValues = value; }
         public int ResetSessionHours { get => _resetSessionHours; set => _resetSessionHours = value; }
         public DateTime LastSessionReset { get => _lastSessionReset; set => _lastSessionReset = value; }
