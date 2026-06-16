@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build release DLL
+    runs-on: windows-latest
+
+    env:
+      CONFIGURATION: Release
+      DEFINE_CONSTANTS: TRACE%3BACCSABERNETWORK%3BBEATLEADERNETWORK%3BHITBLOQNETWORK%3BSCORESABERNETWORK
+      GAME_DIRECTORY: ${{ github.workspace }}\_game
+      OUTPUT_DLL: PPPredictor\bin\Release\net48\PPPredictor.dll
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download Beat Saber references
+        shell: pwsh
+        env:
+          BEAT_SABER_REFERENCES_URL: ${{ secrets.BEAT_SABER_REFERENCES_URL }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:BEAT_SABER_REFERENCES_URL)) {
+            throw "Missing secret BEAT_SABER_REFERENCES_URL. It must point to a zip containing Beat Saber_Data/Managed, Libs, and Plugins references."
+          }
+
+          New-Item -ItemType Directory -Force -Path "$env:GAME_DIRECTORY" | Out-Null
+          $archive = Join-Path $env:RUNNER_TEMP "beat-saber-references.zip"
+          Invoke-WebRequest -Uri $env:BEAT_SABER_REFERENCES_URL -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath "$env:GAME_DIRECTORY" -Force
+
+      - name: Configure GameDirectory
+        shell: pwsh
+        run: |
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <Project>
+            <PropertyGroup>
+              <GameDirectory>$env:GAME_DIRECTORY</GameDirectory>
+            </PropertyGroup>
+          </Project>
+          "@ | Set-Content -Path "PPPredictor\Directory.Build.local.props" -Encoding UTF8
+
+      - name: Restore
+        run: dotnet restore PPPredictor.sln
+
+      - name: Build
+        shell: pwsh
+        run: msbuild PPPredictor.sln /m "/p:Configuration=$env:CONFIGURATION" "/p:DefineConstants=$env:DEFINE_CONSTANTS" /p:ContinuousIntegrationBuild=true /restore:false
+
+      - name: Verify DLL
+        shell: pwsh
+        run: |
+          if (!(Test-Path "$env:OUTPUT_DLL")) {
+            throw "Expected DLL was not produced: $env:OUTPUT_DLL"
+          }
+
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PPPredictor
+          path: ${{ env.OUTPUT_DLL }}
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" "$env:OUTPUT_DLL" --title "${{ github.ref_name }}" --notes "PPPredictor release ${{ github.ref_name }}"
