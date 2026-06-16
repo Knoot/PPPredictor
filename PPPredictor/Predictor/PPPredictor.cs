@@ -29,6 +29,9 @@ namespace PPPredictor.Utilities
         private bool _rankGainRunning = false;
         private double _lastPPGainCall = 0;
         private bool _isActive = false;
+        private bool _isBeatMapInfoLoaded = false;
+        private DateTime _beatMapInfoLoadingStarted = DateTime.MinValue;
+        private int _beatMapInfoRequestVersion = 0;
         private DisplayPPInfo _ppDisplay = new DisplayPPInfo();
         private PPGainResult _ppGainResult = new PPGainResult();
         private Timer _rankTimer;
@@ -162,9 +165,21 @@ namespace PPPredictor.Utilities
 
         public async Task UpdateCurrentBeatMapInfos(BeatmapLevel selectedBeatmapLevel, BeatmapKey beatmapKey)
         {
+            int requestVersion = ++_beatMapInfoRequestVersion;
+            _isBeatMapInfoLoaded = false;
+            _beatMapInfoLoadingStarted = DateTime.Now;
             _currentBeatMapInfo = new PPPBeatMapInfo(selectedBeatmapLevel != null ? Collections.GetCustomLevelHash(selectedBeatmapLevel.levelID) : null, Converter.Converter.ConvertBeatmapKey(beatmapKey));
+            SendDisplayImproveInfo("loading...", true);
             await UpdateCurrentBeatMapInfos();
             CalculatePP();
+            if (!IsRanked())
+            {
+                await Task.Delay(2000);
+                if (requestVersion == _beatMapInfoRequestVersion)
+                {
+                    CalculatePP();
+                }
+            }
         }
 
         private async Task UpdateCurrentBeatMapInfos()
@@ -174,6 +189,7 @@ namespace PPPredictor.Utilities
             _currentBeatMapInfo.OldDotsEnabled = IsOldDotsActive(_currentBeatMapInfo.BeatmapKey);
             _currentBeatMapInfo = GetModifiedBeatMapInfo(_gameplayModifiers);
             _currentBeatMapInfo.MaxPP = -1;
+            _isBeatMapInfoLoaded = true;
         }
         #endregion
 
@@ -284,7 +300,7 @@ namespace PPPredictor.Utilities
             _ppDisplay.PPGain = $"{ppGains:+0.##;-0.##;0}{PPSuffix}";
             _ppDisplay.PPGainDiffColor = DisplayHelper.GetDisplayColor(ppGains, false, true);
             _ppDisplay.ImproveData = GetImproveDataDisplay();
-            SendDisplayImproveInfo(_ppDisplay.ImproveData, false);
+            SendDisplayImproveInfo(_ppDisplay.ImproveData, IsImproveDataLoadingDisplay(_ppDisplay.ImproveData));
 
             DisplayRankGain(null, _ppDisplay);
             //Restart rank calculation timer
@@ -298,8 +314,17 @@ namespace PPPredictor.Utilities
             {
                 return string.Empty;
             }
+            if (!_isBeatMapInfoLoaded)
+            {
+                return "loading...";
+            }
             if (!IsRanked())
             {
+                if ((DateTime.Now - _beatMapInfoLoadingStarted).TotalSeconds < 2)
+                {
+                    return "loading...";
+                }
+
                 return "unranked";
             }
 
@@ -323,6 +348,11 @@ namespace PPPredictor.Utilities
         private bool HasImproveData()
         {
             return leaderboardName == Leaderboard.BeatLeader || leaderboardName == Leaderboard.ScoreSaber;
+        }
+
+        private bool IsImproveDataLoadingDisplay(string improveData)
+        {
+            return !_isBeatMapInfoLoaded || improveData == "loading...";
         }
 
         private double? FindRawPPForWeightedGain(double targetWeightedPP, double maxPP)

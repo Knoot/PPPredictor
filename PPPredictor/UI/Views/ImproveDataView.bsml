@@ -3,13 +3,19 @@
     <button text='~improveDataMovePanelIcon' hover-hint='Lock or unlock improve data panel movement' on-click='move-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
     <button text='⌁' hover-hint='Attach improve data panel to the main panel' on-click='attach-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
   </horizontal>
-  <vertical vertical-fit='PreferredSize' preferred-width='50' child-align='MiddleLeft' spacing='1'>
-    <horizontal horizontal-fit='PreferredSize' align='Left' child-align='MiddleLeft' spacing='1'>
+  <vertical vertical-fit='PreferredSize' preferred-width='50' align='Center' child-align='MiddleLeft' spacing='1'>
+    <horizontal preferred-width='50' align='Left' child-align='MiddleLeft' spacing='1'>
       <image src='~scoreSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
+      <vertical preferred-width='3' min-width='3' preferred-height='3' min-height='3' child-align='MiddleCenter'>
+        <loading-indicator active='~isScoreSaberImproveDataLoading' ignore-layout='true' preserve-aspect='true' preferred-width='3' min-width='3' preferred-height='3' min-height='3'></loading-indicator>
+      </vertical>
       <text text='~scoreSaberImproveData' italics='true' align='Left' font-size='3.5' />
     </horizontal>
-    <horizontal horizontal-fit='PreferredSize' align='Left' child-align='MiddleLeft' spacing='1'>
+    <horizontal preferred-width='50' align='Left' child-align='MiddleLeft' spacing='1'>
       <image src='~beatLeaderImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
+      <vertical preferred-width='3' min-width='3' preferred-height='3' min-height='3' child-align='MiddleCenter'>
+        <loading-indicator active='~isBeatLeaderImproveDataLoading' ignore-layout='true' preserve-aspect='true' preferred-width='3' min-width='3' preferred-height='3' min-height='3'></loading-indicator>
+      </vertical>
       <text text='~beatLeaderImproveData' italics='true' align='Left' font-size='3.5' />
     </horizontal>
   </vertical>

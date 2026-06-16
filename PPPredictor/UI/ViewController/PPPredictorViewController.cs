@@ -629,6 +629,18 @@ namespace PPPredictor.UI.ViewController
             get => string.IsNullOrEmpty(_beatLeaderImproveData) ? "-" : _beatLeaderImproveData;
         }
 
+        [UIValue("isScoreSaberImproveDataLoading")]
+        private bool IsScoreSaberImproveDataLoading
+        {
+            get => _loadingImproveDataLeaderboards.Contains(Leaderboard.ScoreSaber.ToString());
+        }
+
+        [UIValue("isBeatLeaderImproveDataLoading")]
+        private bool IsBeatLeaderImproveDataLoading
+        {
+            get => _loadingImproveDataLeaderboards.Contains(Leaderboard.BeatLeader.ToString());
+        }
+
         [UIValue("scoreSaberImproveDataIcon")]
         private string ScoreSaberImproveDataIcon
         {
@@ -841,6 +853,8 @@ namespace PPPredictor.UI.ViewController
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreSaberImproveData)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BeatLeaderImproveData)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsScoreSaberImproveDataLoading)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBeatLeaderImproveDataLoading)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreSaberImproveDataIcon)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BeatLeaderImproveDataIcon)));
         }
