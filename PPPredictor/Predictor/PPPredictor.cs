@@ -457,6 +457,7 @@ namespace PPPredictor.Utilities
         private async Task DisplaySession(bool doResetSession)
         {
             (PPPPlayer sessionPlayer, PPPPlayer currentPlayer) = await calculatorInstance.UpdatePlayer(leaderboardName, currentMapPool.Id, doResetSession);
+            Plugin.ProfileInfo.LastSessionReset = calculatorInstance.LastSessionReset;
             DisplaySessionInfo sessionDisplay = new DisplaySessionInfo();
             if (sessionPlayer != null && currentPlayer != null)
             {

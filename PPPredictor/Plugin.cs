@@ -1,12 +1,14 @@
 ﻿using HarmonyLib;
 using IPA;
 using PPPredictor.Data;
+using PPPredictor.Core.DataType.LeaderBoard;
 using PPPredictor.Installers;
 using PPPredictor.UI.ViewController;
 using PPPredictor.Utilities;
 using SiraUtil.Zenject;
 using System.Reflection;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using static PPPredictor.Core.DataType.Enums;
 using IPALogger = IPA.Logging.Logger;
@@ -75,7 +77,12 @@ namespace PPPredictor
         [OnExit]
         public void OnApplicationQuit()
         {
-            ProfileInfoMgr.SaveProfile(ProfileInfo, PPPredictorMgr.CalculatorInstance.GetSaveData());
+            var calculatorInstance = PPPredictorMgr.CalculatorInstance;
+            if (calculatorInstance != null)
+            {
+                ProfileInfo.LastSessionReset = calculatorInstance.LastSessionReset;
+            }
+            ProfileInfoMgr.SaveProfile(ProfileInfo, calculatorInstance?.GetSaveData() ?? new Dictionary<string, LeaderboardData>());
         }
 
         [OnDisable]

@@ -157,7 +157,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
     </ItemGroup>
-    <Target Name="CopyPlugin" AfterTargets="Build">
+    <Target Name="CopyPlugin" AfterTargets="Build" Condition="'$(SkipCopyPlugin)' != 'true'">
       <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Plugins\" SkipUnchangedFiles="false" />
     </Target>
   <PropertyGroup>
