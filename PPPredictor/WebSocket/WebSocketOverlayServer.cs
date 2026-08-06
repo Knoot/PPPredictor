@@ -9,7 +9,7 @@ namespace PPPredictor.WebSocket
 
         public void StartSocket()
         {
-            server = new WebSocketServer($"ws://localhost:{Plugin.ProfileInfo.StreamOverlayPort}");
+            server = new WebSocketServer($"ws://0.0.0.0:{Plugin.ProfileInfo.StreamOverlayPort}");
             server.AddWebSocketService<PPPreditorWS>("/socket");
             server.Start();
         }
