@@ -6,16 +6,20 @@ using PPPredictor.Data.DisplayInfos;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace PPPredictor.Interfaces
 {
-    interface IPPPredictor
+    interface IPPPredictor : IDisposable
     {
         void ChangeGameplayModifiers(GameplaySetupViewController gameplaySetupViewController);
         void DifficultyChanged(BeatmapLevel selectedBeatmapLevel, BeatmapKey beatmapKey);
         Task UpdateCurrentAndCheckResetSession(bool doResetSession);
         void ScoreSet(PPPScoreSetData data);
         void RefreshCurrentData(int fetchLength, bool refreshStars = false, bool fetchOnePage = false);
+        void RefreshAfterReconnect();
+        Task RunFullScoreSync(string poolId, CancellationToken cancellation);
+        Task CheckSyncConfirmations();
         void ResetDisplay(bool resetAll);
         double CalculatePPatPercentage(double percentage, PPPBeatMapInfo beatMapInfo, bool levelFailed = false, bool levelPaused = false);
         double CalculateMaxPP();

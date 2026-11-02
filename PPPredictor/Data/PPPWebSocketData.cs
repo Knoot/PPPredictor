@@ -13,6 +13,8 @@ namespace PPPredictor.Data
             var data = new PPPScoreSetData();
             data.leaderboardName = leaderboardName;
             data.userId = commandData.score.leaderboardPlayerInfo.id;
+            data.pp = commandData.score.pp;
+            data.score = commandData.score.baseScore;
             data.hash = $"{commandData.leaderboard.songHash}_{commandData.leaderboard.difficulty.gameMode}_{commandData.leaderboard.difficulty.difficulty}".ToUpper();
             return data;
         }
@@ -39,7 +41,8 @@ namespace PPPredictor.Data
 
     class PPPWsScoreSaberScore
     {
-        public double pp;
+        public double? pp;
+        public long? baseScore;
         public WebSocketScoreCommandPlayerInfo leaderboardPlayerInfo;
     }
 
@@ -54,7 +57,8 @@ namespace PPPredictor.Data
     {
         public int validContexts { get; set; }
         public string playerId { get; set; }
-        public double pp { get; set; }
+        public double? pp { get; set; }
+        public long? baseScore { get; set; }
         public PPPWsBeatLeaderPlayer player { get; set; }
 
         public PPPWsBeatLeaderLeaderboard leaderboard { get; set; }
@@ -65,6 +69,8 @@ namespace PPPredictor.Data
             data.leaderboardName = leaderboardName;
             data.context = validContexts;
             data.userId = playerId;
+            data.pp = pp;
+            data.score = baseScore;
             data.hash = $"{leaderboard.song.hash}_SOLO{leaderboard.difficulty.modeName}_{leaderboard.difficulty.value}".ToUpper();
             return data;
         }

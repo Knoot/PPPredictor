@@ -8,7 +8,7 @@ A list/explanation of all options is available [here](https://github.com/no-1-no
 |Leaderboard|Prerequisite|Note|
 |--|--|--|
 |[ScoreSaber](https://scoresaber.com/)|ScorSsaber mod installed||
-|[BeatLeader](https://beatleader.xyz)|Beatleader mod installed||
+|[BeatLeader](https://beatleader.com)|Beatleader mod installed||
 |[HitBloq](https://hitbloq.com)|HitBloq mod installed||
 |[AccSaber](https://accsaber.com)|Scoresaber mod installed and AccSaber activated in PPPredictor options|No automatic reload of scores|
 

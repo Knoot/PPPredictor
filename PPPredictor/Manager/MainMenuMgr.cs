@@ -4,7 +4,6 @@ using BeatSaberMarkupLanguage.MenuButtons;
 using BeatSaberPlaylistsLib.Types;
 using PPPredictor.Interfaces;
 using System.Threading.Tasks;
-using SongCore;
 
 namespace PPPredictor.Utilities
 {
@@ -27,6 +26,7 @@ namespace PPPredictor.Utilities
 
         public void Dispose()
         {
+            ppPredictorMgr.SetMenuAvailable(false);
             MenuButtons.Instance.UnregisterButton(menuButton);
             levelSelectionNavigationController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
             levelSelectionNavigationController.didChangeLevelDetailContentEvent -= OnDetailContentChanged;
@@ -39,6 +39,7 @@ namespace PPPredictor.Utilities
 
         public void Initialize()
         {
+            ppPredictorMgr.SetMenuAvailable(true);
             MenuButtons.Instance.RegisterButton(menuButton);
             levelSelectionNavigationController.didChangeDifficultyBeatmapEvent += OnDifficultyChanged;
             levelSelectionNavigationController.didChangeLevelDetailContentEvent += OnDetailContentChanged;
@@ -66,22 +67,20 @@ namespace PPPredictor.Utilities
 
         private void OnDetailContentChanged(LevelSelectionNavigationController lvlSelectionNavigationCtrl, StandardLevelDetailViewController.ContentType contentType)
         {
-            if (contentType == StandardLevelDetailViewController.ContentType.OwnedAndReady && IsNormalMainMenu())
+            if (!IsNormalMainMenu()) return;
+            if (contentType == StandardLevelDetailViewController.ContentType.OwnedAndReady)
             {
                 DiffultyChangedDecideCustomMap(lvlSelectionNavigationCtrl);
+            }
+            else
+            {
+                this.ppPredictorMgr.DifficultyChanged(null, default);
             }
         }
 
         private void DiffultyChangedDecideCustomMap(LevelSelectionNavigationController lvlSelectionNavigationCtrl)
         {
-            if (!string.IsNullOrEmpty(Collections.GetCustomLevelHash(lvlSelectionNavigationCtrl.beatmapLevel.levelID)) && IsNormalMainMenu()) //Checking if it is a custom map
-            {
-                this.ppPredictorMgr.DifficultyChanged(lvlSelectionNavigationCtrl.beatmapLevel, lvlSelectionNavigationCtrl.beatmapKey);
-            }
-            else
-            {
-                this.ppPredictorMgr.DifficultyChanged(null, lvlSelectionNavigationCtrl.beatmapKey);
-            }
+            this.ppPredictorMgr.DifficultyChanged(lvlSelectionNavigationCtrl.beatmapLevel, lvlSelectionNavigationCtrl.beatmapKey);
 
         }
 

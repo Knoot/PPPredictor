@@ -167,6 +167,8 @@ namespace PPPredictor.UI.ViewController
             ResetDisplay(false);
         }
 
+        internal void RequestFullScoreSync() => ppPredictorMgr.RequestFullScoreSync();
+
         public void OnScreenHandleReleased(object sender, FloatingScreenHandleEventArgs args)
         {
             Plugin.ProfileInfo.Position = floatingScreen.transform.position;
@@ -268,7 +270,7 @@ namespace PPPredictor.UI.ViewController
         [UIAction("refresh-profile-clicked")]
         private void RefreshProfileClicked()
         {
-            this.ppPredictorMgr.RefreshCurrentData(10);
+            this.ppPredictorMgr.RefreshCurrentData(10, true);
         }
 #pragma warning restore IDE0051 // Remove unused private members
 

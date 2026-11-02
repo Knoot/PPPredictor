@@ -28,6 +28,7 @@
     <string-setting text='Port' value='stream-overlay-port' bind-value='true' apply-on-change='true'></string-setting>
     <text text='Reset' italics='true' align='Center' font-size='4' />
     <button text='Reset cache (scores/stars/etc.)' on-click='reset-cache' min-width='16' pref-height='8' interactable='true'/>
+    <button text='Full sync scores' on-click='full-score-sync' min-width='16' pref-height='8' interactable='true'/>
     <button text='Reset settings' on-click='reset-settings' min-width='16' pref-height='8' interactable='true'/>
     <modal id='resetSettingsModal' show-event='open-reset-settings-modal' hide-event='close-reset-settings-modal' click-off-closes="true" anchor-pos-y='10' size-delta-x='80' size-delta-y='15' move-to-center='true'>
       <vertical horizontal-fit='PreferredSize' vertical-fit='PreferredSize'>

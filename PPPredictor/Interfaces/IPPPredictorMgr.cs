@@ -41,6 +41,9 @@ namespace PPPredictor.Interfaces
         void ScoreSet(string leaderboardName, PPPScoreSetData data);
 
         void RefreshCurrentData(int v, bool refreshStars = false);
+        void RefreshAfterReconnect(string leaderboardName);
+        void SetMenuAvailable(bool available);
+        void RequestFullScoreSync();
 
         void SetPercentage(float percentage);
 
@@ -56,7 +59,7 @@ namespace PPPredictor.Interfaces
 
         double GetMaxPPForCalculator(Leaderboard leaderBoardName);
 
-        PPPBeatMapInfo GetModifiedBeatMapInfo(Leaderboard leaderBoardName, GameplayModifiers gameplayModifiers);
+        PPPBeatMapInfo GetModifiedBeatMapInfo(Leaderboard leaderBoardName, GameplayModifiers gameplayModifiers, bool levelFailed = false, bool levelPaused = false);
 
         bool IsRanked(Leaderboard leaderBoardName);
 

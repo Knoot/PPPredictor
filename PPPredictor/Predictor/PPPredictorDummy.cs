@@ -10,6 +10,10 @@ namespace PPPredictor.Utilities
 {
     internal class PPPredictorDummy : IPPPredictor
     {
+        public void RefreshAfterReconnect() { }
+        public Task RunFullScoreSync(string poolId, System.Threading.CancellationToken cancellation) => Task.CompletedTask;
+        public Task CheckSyncConfirmations() => Task.CompletedTask;
+        public void Dispose() { }
         public float Percentage { get => 0; set { return; } }
 
         public string LeaderBoardName => string.Empty;

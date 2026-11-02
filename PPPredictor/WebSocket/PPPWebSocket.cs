@@ -1,81 +1,104 @@
 ﻿using Newtonsoft.Json;
+using PPPredictor.Core;
 using PPPredictor.Core.DataType;
-using PPPredictor.Data;
 using PPPredictor.Interfaces;
-using PPPredictor.Utilities;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
-using static PPPredictor.Core.DataType.Enums;
 
 namespace PPPredictor.WebSocket
 {
     internal class PPPWebSocket<T> : IPPPWebSocket where T : IPPPRawWebsocketData
     {
-        private WebSocketSharp.WebSocket webSocket;
+        private readonly string leaderboardName;
+        private readonly string url;
+        private readonly ReconnectLoop reconnect;
+        private Task<UserInfo> userInfo;
+        private int started, stopped;
         public event EventHandler<PPPScoreSetData> OnScoreSet;
-        private string userId = string.Empty;
-        private string _leaderboardName = string.Empty;
-        private string _url = string.Empty;
+        public event EventHandler OnReconnected;
+        public string LeaderboardName => leaderboardName;
 
         public PPPWebSocket(string url, string leaderboardName)
         {
-            _ = StartWebSocket(url, leaderboardName);
+            this.leaderboardName = leaderboardName;
+            this.url = url;
+            reconnect = new ReconnectLoop(RunConnection,
+                ex => Plugin.ErrorPrint($"WebSocket {leaderboardName}: {ex.Message}; reconnecting."));
+            reconnect.Connected += isReconnect =>
+            {
+                if (isReconnect && Volatile.Read(ref stopped) == 0) OnReconnected?.Invoke(this, EventArgs.Empty);
+            };
         }
 
-        private async Task StartWebSocket(string url, string leaderboardName)
+        public void Start()
         {
-            this._leaderboardName = leaderboardName;
-            this._url = url;
-            try
-            {
-                userId = (await Plugin.GetUserInfoBS()).platformUserId;
-                webSocket = new WebSocketSharp.WebSocket(url);
-                webSocket.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-                webSocket.OnMessage += WebSocket_OnMessage;
-                webSocket.OnError += WebSocket_OnError;
-                webSocket.Connect();
-            }
-            catch (Exception ex)
-            {
-                Plugin.ErrorPrint($"Error creating Websocket for {leaderboardName}: {ex.Message}");
-            }
+            if (Volatile.Read(ref stopped) != 0 || Interlocked.Exchange(ref started, 1) != 0) return;
+            userInfo = Plugin.GetUserInfoBS();
+            reconnect.Start();
         }
 
-        private void WebSocket_OnMessage(object sender, MessageEventArgs e)
+        private async Task RunConnection(CancellationToken token, Action connected)
         {
-            try
+            if (userInfo == null || userInfo.IsFaulted || userInfo.IsCanceled) userInfo = Plugin.GetUserInfoBS();
+            var canceled = new TaskCompletionSource<UserInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+            UserInfo user;
+            using (token.Register(() => canceled.TrySetCanceled()))
+                user = await await Task.WhenAny(userInfo, canceled.Task).ConfigureAwait(false);
+            string userId = user.platformUserId;
+            token.ThrowIfCancellationRequested();
+            using (var socket = new WebSocketSharp.WebSocket(url))
             {
-                var socketData = JsonConvert.DeserializeObject<T>(e.Data);
-                var v = socketData.ConvertToPPPWebSocketData(_leaderboardName);
-                if (v.userId == userId)
+                socket.WaitTime = TimeSpan.FromSeconds(5);
+                socket.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                var disconnected = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                EventHandler opened = (sender, args) => connected();
+                EventHandler<CloseEventArgs> closed = (sender, args) => disconnected.TrySetResult(true);
+                EventHandler<ErrorEventArgs> failed = (sender, args) => disconnected.TrySetException(
+                    args.Exception ?? new InvalidOperationException(args.Message));
+                EventHandler<MessageEventArgs> message = (sender, args) =>
                 {
-                    OnScoreSet?.Invoke(this, v);
+                    if (token.IsCancellationRequested || disconnected.Task.IsCompleted || Volatile.Read(ref stopped) != 0 || !args.IsText
+                        || args.Data == "Connected to the ScoreSaber WSS") return;
+                    try
+                    {
+                        var raw = JsonConvert.DeserializeObject<T>(args.Data);
+                        var data = raw.ConvertToPPPWebSocketData(leaderboardName);
+                        if (data != null && data.userId == userId && !token.IsCancellationRequested && !disconnected.Task.IsCompleted)
+                            OnScoreSet?.Invoke(this, data);
+                    }
+                    catch (Exception ex) { Plugin.ErrorPrint($"WebSocket {leaderboardName} message: {ex.Message}"); }
+                };
+                socket.OnOpen += opened;
+                socket.OnClose += closed;
+                socket.OnError += failed;
+                socket.OnMessage += message;
+                try
+                {
+                    using (token.Register(() => disconnected.TrySetCanceled()))
+                    {
+                        token.ThrowIfCancellationRequested();
+                        socket.ConnectAsync();
+                        await disconnected.Task.ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    socket.OnOpen -= opened;
+                    socket.OnClose -= closed;
+                    socket.OnError -= failed;
+                    socket.OnMessage -= message;
+                    // Close BeatLeader as well; detached callbacks cannot schedule another attempt.
+                    socket.Close();
                 }
             }
-            catch (Exception ex)
-            {
-                if (e != null && e.Data != null && e.Data == "Connected to the ScoreSaber WSS") return; //Ignore SS connect message
-                Plugin.ErrorPrint($"Error in Websocket for {_leaderboardName} OnMessage: {ex.Message}");
-            }
         }
 
-        private async void WebSocket_OnError(object sender, ErrorEventArgs e)
+        public Task StopWebSocket()
         {
-            Plugin.ErrorPrint($"Error in Websocket for {_leaderboardName} Retry connecting...");
-            await Task.Delay(5000);
-            _ = StartWebSocket(_url, _leaderboardName);
-        }
-
-        public void StopWebSocket()
-        {
-            webSocket.OnMessage -= WebSocket_OnMessage;
-            webSocket.OnError -= WebSocket_OnError;
-            if (_leaderboardName != Leaderboard.BeatLeader.ToString())
-            {
-                webSocket?.Close(); //Stop beatleader error when tying to disconnect...
-            }
-            webSocket = null;
+            if (Interlocked.Exchange(ref stopped, 1) == 0) reconnect.Dispose();
+            return reconnect.Completion;
         }
     }
 }

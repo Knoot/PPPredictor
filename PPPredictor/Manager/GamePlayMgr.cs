@@ -39,6 +39,7 @@ namespace PPPredictor.Utilities
 
         public void Initialize()
         {
+            ppPredictorMgr.SetMenuAvailable(false);
             try
             {
                 OverlayDataSubscribe();
@@ -331,7 +332,7 @@ namespace PPPredictor.Utilities
         public LeaderBoardGameplayInfo(Leaderboard leaderboard, IPPPredictorMgr ppPredictorMgr, GameplayModifiers gameplayModifiers)
         {
             modifiedBeatMapInfo = ppPredictorMgr.GetModifiedBeatMapInfo(leaderboard, gameplayModifiers);
-            failedBeatMapInfo = ppPredictorMgr.GetModifiedBeatMapInfo(leaderboard, gameplayModifiers);
+            failedBeatMapInfo = ppPredictorMgr.GetModifiedBeatMapInfo(leaderboard, gameplayModifiers, levelFailed: true);
             ppSuffix = ppPredictorMgr.GetPPSuffixForLeaderboard(leaderboard);
             this.leaderboard = leaderboard;
             this.ppGain = 0;

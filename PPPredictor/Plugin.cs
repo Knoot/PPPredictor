@@ -82,7 +82,9 @@ namespace PPPredictor
             {
                 ProfileInfo.LastSessionReset = calculatorInstance.LastSessionReset;
             }
-            ProfileInfoMgr.SaveProfile(ProfileInfo, calculatorInstance?.GetSaveData() ?? new Dictionary<string, LeaderboardData>());
+            var data = ProfileInfo.RefreshAllLeaderboards ? ProfileInfo.DctleaderBoardData
+                : calculatorInstance?.GetSaveData() ?? ProfileInfo.DctleaderBoardData;
+            ProfileInfoMgr.SaveProfile(ProfileInfo, data);
         }
 
         [OnDisable]

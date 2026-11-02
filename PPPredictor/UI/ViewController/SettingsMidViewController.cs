@@ -69,6 +69,9 @@ namespace PPPredictor.UI.ViewController
         {
             bsmlParserParams.EmitEvent("open-reset-cache-modal");
         }
+
+        [UIAction("full-score-sync")]
+        private void FullScoreSync() => Plugin.pppViewController.RequestFullScoreSync();
 #pragma warning restore IDE0051 // Remove unused private members
 
         [UIValue("version-check-enabled")]

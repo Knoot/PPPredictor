@@ -158,7 +158,8 @@
       </PackageReference>
     </ItemGroup>
     <Target Name="CopyPlugin" AfterTargets="Build" Condition="'$(SkipCopyPlugin)' != 'true'">
-      <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Plugins\" SkipUnchangedFiles="false" />
+      <MakeDir Directories="$(GameDirectory)\IPA\Pending\Plugins;$(GameDirectory)\IPA\Pending\Libs" />
+      <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\IPA\Pending\Plugins\" SkipUnchangedFiles="false" />
     </Target>
   <PropertyGroup>
     <Title>PPPredictor</Title>

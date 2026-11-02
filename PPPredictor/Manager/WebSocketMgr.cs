@@ -2,7 +2,9 @@
 using PPPredictor.Data;
 using PPPredictor.Interfaces;
 using System;
+using PPPredictor.Core;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Zenject;
 using static PPPredictor.Core.DataType.Enums;
@@ -13,55 +15,83 @@ namespace PPPredictor.WebSocket
     {
         private readonly IPPPredictorMgr _ppPredictorMgr;
         private List<IPPPWebSocket> _lsWebSockets = new List<IPPPWebSocket>();
-        private Dictionary<string, Task> dctWaitingRefresh = new Dictionary<string, Task>();
+        private readonly DelayedScoreRefreshQueue delayedRefresh;
+        private readonly SynchronizationContext uiContext = SynchronizationContext.Current;
+        private bool disposed;
 
         internal WebSocketOverlayServer OverlayServer;
 
         public WebSocketMgr(IPPPredictorMgr ppPredictorMgr)
         {
             this._ppPredictorMgr = ppPredictorMgr;
+            delayedRefresh = new DelayedScoreRefreshQueue((leaderboard, data) =>
+                _ppPredictorMgr.ScoreSet(leaderboard.ToString(), data), TimeSpan.FromSeconds(5));
             RestartOverlayServer();
         }
 
         public void CreateScoreWebSockets()
         {
+            if (disposed || _lsWebSockets.Count != 0) return;
             if (Plugin.ProfileInfo.IsScoreSaberEnabled)
             {
                 PPPWebSocket<PPPWsScoreSaberCommand> socket = new PPPWebSocket<PPPWsScoreSaberCommand>("wss://scoresaber.com/ws", Leaderboard.ScoreSaber.ToString());
-                socket.OnScoreSet += PPPWebsocket_OnScoreSet;
-                _lsWebSockets.Add(socket);
+                StartScoreSocket(socket);
             }
             if (Plugin.ProfileInfo.IsBeatLeaderEnabled)
             {
                 PPPWebSocket<PPPWsBeatLeaderData> socket = new PPPWebSocket<PPPWsBeatLeaderData>("wss://sockets.api.beatleader.com/scores", Leaderboard.BeatLeader.ToString());
-                socket.OnScoreSet += PPPWebsocket_OnScoreSet;
-                _lsWebSockets.Add(socket);
+                StartScoreSocket(socket);
             }
         }
 
+        private void StartScoreSocket(IPPPWebSocket socket)
+        {
+            socket.OnScoreSet += PPPWebsocket_OnScoreSet;
+            socket.OnReconnected += Socket_OnReconnected;
+            _lsWebSockets.Add(socket);
+            socket.Start();
+        }
+
+        private void DispatchForSocket(object sender, Action action)
+        {
+            void Apply()
+            {
+                if (!disposed && sender is IPPPWebSocket socket && _lsWebSockets.Contains(socket)) action();
+            }
+            if (uiContext != null && SynchronizationContext.Current != uiContext) uiContext.Post(_ => Apply(), null);
+            else Apply();
+        }
+
+        private void Socket_OnReconnected(object sender, EventArgs args)
+        {
+            DispatchForSocket(sender, () => _ppPredictorMgr.RefreshAfterReconnect(((IPPPWebSocket)sender).LeaderboardName));
+        }
+
         private void PPPWebsocket_OnScoreSet(object sender, PPPScoreSetData data)
+        {
+            DispatchForSocket(sender, () => HandleScore(data));
+        }
+
+        private void HandleScore(PPPScoreSetData data)
         {
             _ppPredictorMgr.ScoreSet(data.leaderboardName, data);
             if (Plugin.ProfileInfo.IsHitBloqEnabled)
             {
                 AddDelayedRefresh(Leaderboard.HitBloq ,data);
             }
+            ScheduleAccSaberRefresh(data);
         }
 
-        private void AddDelayedRefresh(Leaderboard leaderboard, PPPScoreSetData data)
+        internal void ScheduleAccSaberRefresh(PPPScoreSetData data)
         {
-            string key = $"{leaderboard}_{data.hash}";
-            if (!dctWaitingRefresh.ContainsKey(key))
-            {
-                dctWaitingRefresh.Add(key, Task.Run(async () => await WaitForRefresh(leaderboard, data)));
-            }
+            if (Plugin.ProfileInfo.IsAccSaberEnabled) AddDelayedRefresh(Leaderboard.AccSaber, data);
         }
 
-        private async Task WaitForRefresh(Leaderboard leaderboard, PPPScoreSetData data)
+        private async void AddDelayedRefresh(Leaderboard leaderboard, PPPScoreSetData data)
         {
-            await Task.Delay(5000);
-            _ppPredictorMgr.ScoreSet(leaderboard.ToString(), data);
-            dctWaitingRefresh.Remove(data.hash);
+            try { await delayedRefresh.Schedule(leaderboard, data); }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { Plugin.ErrorPrint($"{leaderboard} delayed refresh failed: {ex.Message}"); }
         }
 
         internal void RestartOverlayServer()
@@ -74,18 +104,24 @@ namespace PPPredictor.WebSocket
         #region init dispose
         public void Dispose()
         {
+            disposed = true;
+            delayedRefresh.Dispose();
             OverlayServer.CloseSocket();
-            CloseScoreWebSockets();
+            _ = CloseScoreWebSockets();
         }
 
-        public void CloseScoreWebSockets()
+        public Task CloseScoreWebSockets()
         {
+            delayedRefresh.CancelPending();
+            var stopping = new List<Task>();
             foreach (var socket in _lsWebSockets)
             {
-                socket.StopWebSocket();
                 socket.OnScoreSet -= PPPWebsocket_OnScoreSet;
+                socket.OnReconnected -= Socket_OnReconnected;
+                stopping.Add(socket.StopWebSocket());
             }
             _lsWebSockets.Clear();
+            return Task.WhenAll(stopping);
         }
 
         public void Initialize()
