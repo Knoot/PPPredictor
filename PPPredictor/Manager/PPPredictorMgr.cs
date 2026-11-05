@@ -312,6 +312,9 @@ namespace PPPredictor.Utilities
                 case LoggingMessage.LoggingType.Error:
                     Plugin.ErrorPrint(e.message);
                     break;
+                case LoggingMessage.LoggingType.Info:
+                    Plugin.DebugPrint(e.message);
+                    break;
                 case LoggingMessage.LoggingType.DebugNetworkPrint:
                     Plugin.DebugNetworkPrint(e.message, e.leaderboard);
                     break;

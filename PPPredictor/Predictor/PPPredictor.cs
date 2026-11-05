@@ -472,6 +472,9 @@ namespace PPPredictor.Utilities
                     return "No modifiers: mods not allowed";
                 case PPCalculationBlockReason.NegativeModifiersNotAllowed:
                     return "Golf: negative mods not allowed";
+                case PPCalculationBlockReason.IncompatibleBeatLeaderRatings:
+                    ReportUnavailableCalculation(0);
+                    return "ratings updating";
             }
 
             double maxPP = CalculateMaxPP();
