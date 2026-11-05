@@ -46,7 +46,7 @@ namespace PPPredictor.Utilities
         private readonly Action<Leaderboard, string, FullScoreSyncReason> requestFullSync;
         private PPPMapPoolShort currentMapPool;
         private List<PPPMapPoolShort> lsMapPools = new List<PPPMapPoolShort>();
-        private const double ImproveDataTargetWeightedPP = 1d;
+        private double ImproveDataTargetWeightedPP => Plugin.ProfileInfo.ImproveDataUseTenPP ? 10d : 1d;
         #endregion
 
         public string LeaderBoardName
@@ -440,6 +440,13 @@ namespace PPPredictor.Utilities
             //Restart rank calculation timer
             _rankTimer.Stop();
             _rankTimer.Start();
+        }
+
+        public void RefreshImproveData()
+        {
+            if (_disposed || currentMapPool == null || _refreshQueue.IsBusy) return;
+            _ppDisplay.ImproveData = GetImproveDataDisplay();
+            SendDisplayImproveInfo(_ppDisplay.ImproveData, IsImproveDataLoadingDisplay(_ppDisplay.ImproveData));
         }
 
         private string GetImproveDataDisplay()

@@ -449,6 +449,12 @@ namespace PPPredictor.Utilities
                     item.RefreshAfterReconnect();
         }
 
+        public void ToggleImproveDataTarget()
+        {
+            Plugin.ProfileInfo.ImproveDataUseTenPP = !Plugin.ProfileInfo.ImproveDataUseTenPP;
+            foreach (var predictor in _lsPPPredictor) predictor.RefreshImproveData();
+        }
+
         public void SetPercentage(float percentage)
         {
             _percentage = percentage;

@@ -596,6 +596,16 @@ namespace PPPredictor.UI.ViewController
         #endregion
 
         #region improve data panel
+        [UIValue("improveDataTargetLabel")]
+        private string ImproveDataTargetLabel => Plugin.ProfileInfo.ImproveDataUseTenPP ? "+10" : "+1";
+
+        [UIAction("toggle-improve-data-target-clicked")]
+        private void ToggleImproveDataTargetClicked()
+        {
+            ppPredictorMgr.ToggleImproveDataTarget();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImproveDataTargetLabel)));
+        }
+
         [UIAction("move-improve-data-panel-clicked")]
         private void MoveImproveDataPanelClicked()
         {
@@ -876,6 +886,7 @@ namespace PPPredictor.UI.ViewController
 
         private void UpdateImproveDataDisplayInternal()
         {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImproveDataTargetLabel)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreSaberImproveData)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BeatLeaderImproveData)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AccSaberImproveData)));

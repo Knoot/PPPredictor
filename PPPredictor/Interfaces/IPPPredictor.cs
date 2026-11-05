@@ -29,6 +29,7 @@ namespace PPPredictor.Interfaces
 
         double? GetPersonalBest();
         void CalculatePP();
+        void RefreshImproveData();
         void SetActive(bool setActive, bool hasPoolChanged = false);
         PPPMapPoolShort FindPoolWithSyncURL(string syncUrl);
         Task GetMapPoolIconData();

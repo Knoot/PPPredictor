@@ -11,6 +11,7 @@ namespace PPPredictor.Utilities
     internal class PPPredictorDummy : IPPPredictor
     {
         public void RefreshAfterReconnect() { }
+        public void RefreshImproveData() { }
         public Task RunFullScoreSync(string poolId, System.Threading.CancellationToken cancellation) => Task.CompletedTask;
         public Task CheckSyncConfirmations() => Task.CompletedTask;
         public void Dispose() { }

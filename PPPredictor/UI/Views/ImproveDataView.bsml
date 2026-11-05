@@ -1,29 +1,30 @@
 <vertical vertical-fit='PreferredSize' preferred-width='55' bg='panel-top' pad-top='1' pad-bottom='1' spacing='1' child-align='MiddleCenter' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
   <horizontal horizontal-fit='PreferredSize' align='Right' child-align='MiddleRight' preferred-width='50' spacing='1'>
+    <button text='~improveDataTargetLabel' hover-hint='Switch weighted PP target between +1 and +10' on-click='toggle-improve-data-target-clicked' min-width='9' pref-width='9' pref-height='6' font-size='3'/>
     <button text='~improveDataMovePanelIcon' hover-hint='Lock or unlock improve data panel movement' on-click='move-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
     <button text='⌁' hover-hint='Attach improve data panel to the main panel' on-click='attach-improve-data-panel-clicked' min-width='4' pref-height='6' font-size='3'/>
   </horizontal>
-  <vertical vertical-fit='PreferredSize' preferred-width='50' align='Center' child-align='MiddleLeft' spacing='1'>
-    <horizontal preferred-width='50' align='Left' child-align='MiddleLeft' spacing='1'>
-      <image src='~scoreSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
-      <vertical preferred-width='3' min-width='3' preferred-height='3' min-height='3' child-align='MiddleCenter'>
+  <vertical vertical-fit='PreferredSize' preferred-width='50' min-width='50' align='Center' child-align='MiddleLeft' child-control-width='true' child-expand-width='false' spacing='1'>
+    <horizontal preferred-width='50' min-width='50' preferred-height='5' min-height='5' flexible-width='0' child-align='MiddleLeft' child-control-width='true' child-expand-width='false' child-expand-height='false' spacing='1'>
+      <image src='~scoreSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' flexible-width='0' preferred-height='3' min-height='3'></image>
+      <vertical preferred-width='3' min-width='3' flexible-width='0' preferred-height='3' min-height='3' child-align='MiddleCenter'>
         <loading-indicator active='~isScoreSaberImproveDataLoading' ignore-layout='true' preserve-aspect='true' preferred-width='3' min-width='3' preferred-height='3' min-height='3'></loading-indicator>
       </vertical>
-      <text text='~scoreSaberImproveData' italics='true' align='Left' font-size='3.5' />
+      <text text='~scoreSaberImproveData' preferred-width='41' min-width='0' flexible-width='0' preferred-height='5' font-align='MidlineLeft' italics='true' font-size='3.5' enable-auto-sizing='true' font-size-min='2.5' font-size-max='3.5' word-wrapping='false' overflow-mode='Ellipsis' />
     </horizontal>
-    <horizontal preferred-width='50' align='Left' child-align='MiddleLeft' spacing='1'>
-      <image src='~beatLeaderImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
-      <vertical preferred-width='3' min-width='3' preferred-height='3' min-height='3' child-align='MiddleCenter'>
+    <horizontal preferred-width='50' min-width='50' preferred-height='5' min-height='5' flexible-width='0' child-align='MiddleLeft' child-control-width='true' child-expand-width='false' child-expand-height='false' spacing='1'>
+      <image src='~beatLeaderImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' flexible-width='0' preferred-height='3' min-height='3'></image>
+      <vertical preferred-width='3' min-width='3' flexible-width='0' preferred-height='3' min-height='3' child-align='MiddleCenter'>
         <loading-indicator active='~isBeatLeaderImproveDataLoading' ignore-layout='true' preserve-aspect='true' preferred-width='3' min-width='3' preferred-height='3' min-height='3'></loading-indicator>
       </vertical>
-      <text text='~beatLeaderImproveData' italics='true' align='Left' font-size='3.5' />
+      <text text='~beatLeaderImproveData' preferred-width='41' min-width='0' flexible-width='0' preferred-height='5' font-align='MidlineLeft' italics='true' font-size='3.5' enable-auto-sizing='true' font-size-min='2.5' font-size-max='3.5' word-wrapping='false' overflow-mode='Ellipsis' />
     </horizontal>
-    <horizontal preferred-width='50' align='Left' child-align='MiddleLeft' spacing='1'>
-      <image src='~accSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' preferred-height='3' min-height='3'></image>
-      <vertical preferred-width='3' min-width='3' preferred-height='3' min-height='3' child-align='MiddleCenter'>
+    <horizontal preferred-width='50' min-width='50' preferred-height='5' min-height='5' flexible-width='0' child-align='MiddleLeft' child-control-width='true' child-expand-width='false' child-expand-height='false' spacing='1'>
+      <image src='~accSaberImproveDataIcon' preserve-aspect='true' preferred-width='4' min-width='4' flexible-width='0' preferred-height='3' min-height='3'></image>
+      <vertical preferred-width='3' min-width='3' flexible-width='0' preferred-height='3' min-height='3' child-align='MiddleCenter'>
         <loading-indicator active='~isAccSaberImproveDataLoading' ignore-layout='true' preserve-aspect='true' preferred-width='3' min-width='3' preferred-height='3' min-height='3'></loading-indicator>
       </vertical>
-      <text text='~accSaberImproveData' italics='true' align='Left' font-size='3.5' />
+      <text text='~accSaberImproveData' preferred-width='41' min-width='0' flexible-width='0' preferred-height='5' font-align='MidlineLeft' italics='true' font-size='3.5' enable-auto-sizing='true' font-size-min='2.5' font-size-max='3.5' word-wrapping='false' overflow-mode='Ellipsis' />
     </horizontal>
   </vertical>
 </vertical>

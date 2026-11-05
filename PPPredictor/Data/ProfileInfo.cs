@@ -109,6 +109,7 @@ namespace PPPredictor.Data
         public SVector3 EulerAngles { get => _eulerAngles; set => _eulerAngles = value; }
         public SVector3 ImproveDataPosition { get => _improveDataPosition; set => _improveDataPosition = value; }
         public SVector3 ImproveDataEulerAngles { get => _improveDataEulerAngles; set => _improveDataEulerAngles = value; }
+        public bool ImproveDataUseTenPP { get; set; }
         [DefaultValue(true)]
         public bool IsImproveDataPanelAttached { get => _isImproveDataPanelAttached; set => _isImproveDataPanelAttached = value; }
         public bool DisplaySessionValues { get => _displaySessionValues; set => _displaySessionValues = value; }

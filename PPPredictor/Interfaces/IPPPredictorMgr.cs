@@ -46,6 +46,7 @@ namespace PPPredictor.Interfaces
         void RequestFullScoreSync();
 
         void SetPercentage(float percentage);
+        void ToggleImproveDataTarget();
 
         double GetPercentage();
 
