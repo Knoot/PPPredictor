@@ -28,6 +28,8 @@ namespace PPPredictor.UI.ViewController
         private static readonly string githubUrl = "https://github.com/no-1-noob/PPPredictor/releases/latest";
         private FloatingScreen floatingScreen;
         private FloatingScreen improveDataFloatingScreen;
+        private StickyPercentageSlider stickyPercentageSlider;
+        private bool updatingPercentage;
 #pragma warning disable CS0649
         [Inject] private readonly IPPPredictorMgr ppPredictorMgr;
 #pragma warning restore CS0649
@@ -53,6 +55,7 @@ namespace PPPredictor.UI.ViewController
         public void Initialize()
         {
             Plugin.pppViewController = this;
+            _isDataLoading = ppPredictorMgr.IsDataLoading();
             displaySessionInfo = new DisplaySessionInfo();
             displayPPInfo = new DisplayPPInfo();
             floatingScreen = FloatingScreen.CreateFloatingScreen(new Vector2(75, 100), true, Plugin.ProfileInfo.Position, new Quaternion(0, 0, 0, 0));
@@ -189,6 +192,12 @@ namespace PPPredictor.UI.ViewController
 
         public void Dispose()
         {
+            if (stickyPercentageSlider != null)
+            {
+                stickyPercentageSlider.Detach();
+                UnityEngine.Object.Destroy(stickyPercentageSlider);
+                stickyPercentageSlider = null;
+            }
             floatingScreen.HandleReleased -= OnScreenHandleReleased;
             improveDataFloatingScreen.HandleReleased -= OnImproveDataScreenHandleReleased;
             ppPredictorMgr.ViewActivated -= PpPredictorMgr_ViewActivated;
@@ -221,6 +230,11 @@ namespace PPPredictor.UI.ViewController
             SliderFormatting();
 
             UpdateMinMaxIncements(sliderFine.Slider.value);
+            if (stickyPercentageSlider == null)
+            {
+                stickyPercentageSlider = sliderFine.Slider.gameObject.AddComponent<StickyPercentageSlider>();
+                stickyPercentageSlider.Initialize(sliderFine, () => SliderFineValue, ApplyPercentage);
+            }
         }
 
         private void SliderFormatting()
@@ -343,12 +357,30 @@ namespace PPPredictor.UI.ViewController
             get => ppPredictorMgr.CurrentPPPredictor.Percentage;
             set
             {
-                ppPredictorMgr.SetPercentage(value);
-                Plugin.ProfileInfo.LastPercentageSelected = ppPredictorMgr.CurrentPPPredictor.Percentage;
-                ppPredictorMgr.CurrentPPPredictor.CalculatePP();
+                if (updatingPercentage) return;
+                if (stickyPercentageSlider != null) stickyPercentageSlider.SetTarget(value);
+                else ApplyPercentage(value);
+            }
+        }
+
+        private void ApplyPercentage(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) return;
+            value = Mathf.Clamp((float)Math.Round(value, 2, MidpointRounding.AwayFromZero), sliderFine.Slider.minValue, sliderFine.Slider.maxValue);
+            bool changed = Math.Abs(SliderFineValue - value) > 0.00001f;
+            updatingPercentage = true;
+            try
+            {
+                if (changed)
+                {
+                    ppPredictorMgr.SetPercentage(value);
+                    Plugin.ProfileInfo.LastPercentageSelected = value;
+                    ppPredictorMgr.CurrentPPPredictor.CalculatePP();
+                }
                 sliderFine.Slider.value = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SliderFineValue)));
             }
+            finally { updatingPercentage = false; }
         }
 
         [UIValue("minValue")]
@@ -376,9 +408,17 @@ namespace PPPredictor.UI.ViewController
         }
         private void UpdateMinMaxIncements(float oldSliderValue)
         {
-            sliderFine.Slider.minValue = Plugin.ProfileInfo.LastMinPercentageSelected;
-            sliderFine.Slider.maxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
-            SliderFineValue = Math.Max(Math.Min(oldSliderValue, Plugin.ProfileInfo.LastMaxPercentageSelected), Plugin.ProfileInfo.LastMinPercentageSelected);
+            if (stickyPercentageSlider != null) oldSliderValue = SliderFineValue;
+            stickyPercentageSlider?.CancelDrag();
+            updatingPercentage = true;
+            try
+            {
+                sliderFine.Slider.minValue = Plugin.ProfileInfo.LastMinPercentageSelected;
+                sliderFine.Slider.maxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
+                sliderFine.Slider.numberOfSteps = (int)Math.Round((sliderFine.Slider.maxValue - sliderFine.Slider.minValue) / 0.01f) + 1;
+            }
+            finally { updatingPercentage = false; }
+            ApplyPercentage(Math.Max(Math.Min(oldSliderValue, Plugin.ProfileInfo.LastMaxPercentageSelected), Plugin.ProfileInfo.LastMinPercentageSelected));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MaxValue)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MinValue)));
         }
@@ -742,9 +782,10 @@ namespace PPPredictor.UI.ViewController
 
         private void DisplayInitialPercentages()
         {
-            SliderFineValue = Plugin.ProfileInfo.LastPercentageSelected;
+            float selectedPercentage = Plugin.ProfileInfo.LastPercentageSelected;
             MinValue = Plugin.ProfileInfo.LastMinPercentageSelected;
             MaxValue = Plugin.ProfileInfo.LastMaxPercentageSelected;
+            ApplyPercentage(selectedPercentage);
         }
 
         public void ResetPosition()

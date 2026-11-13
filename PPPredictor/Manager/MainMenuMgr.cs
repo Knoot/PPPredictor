@@ -18,6 +18,9 @@ namespace PPPredictor.Utilities
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value null
 
         private readonly MenuButton menuButton;
+        private bool levelSelectionActive;
+        private bool disposed;
+        private int selectionActivationVersion;
 
         public MainMenuMgr()
         { 
@@ -26,6 +29,9 @@ namespace PPPredictor.Utilities
 
         public void Dispose()
         {
+            disposed = true;
+            levelSelectionActive = false;
+            ++selectionActivationVersion;
             ppPredictorMgr.SetMenuAvailable(false);
             MenuButtons.Instance.UnregisterButton(menuButton);
             levelSelectionNavigationController.didChangeDifficultyBeatmapEvent -= OnDifficultyChanged;
@@ -62,12 +68,12 @@ namespace PPPredictor.Utilities
 
         private void OnDifficultyChanged(LevelSelectionNavigationController lvlSelectionNavigationCtrl)
         {
-            if (IsNormalMainMenu()) DiffultyChangedDecideCustomMap(lvlSelectionNavigationCtrl);
+            if (!disposed && levelSelectionActive && IsNormalMainMenu()) DiffultyChangedDecideCustomMap(lvlSelectionNavigationCtrl);
         }
 
         private void OnDetailContentChanged(LevelSelectionNavigationController lvlSelectionNavigationCtrl, StandardLevelDetailViewController.ContentType contentType)
         {
-            if (!IsNormalMainMenu()) return;
+            if (disposed || !levelSelectionActive || !IsNormalMainMenu()) return;
             if (contentType == StandardLevelDetailViewController.ContentType.OwnedAndReady)
             {
                 DiffultyChangedDecideCustomMap(lvlSelectionNavigationCtrl);
@@ -84,12 +90,41 @@ namespace PPPredictor.Utilities
 
         }
 
-        private void OnLevelSelectionActivated(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        private async void OnLevelSelectionActivated(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            this.ppPredictorMgr.ActivateView(IsNormalMainMenu());
+            if (disposed) return;
+            levelSelectionActive = true;
+            int version = ++selectionActivationVersion;
+            bool normalMenu = IsNormalMainMenu();
+            ppPredictorMgr.SetMenuAvailable(normalMenu);
+            ppPredictorMgr.ActivateView(normalMenu);
+            if (!normalMenu) return;
+
+            // Child controllers restore their selection after the parent's activation event.
+            await Task.Yield();
+            if (disposed || !levelSelectionActive || version != selectionActivationVersion || !IsNormalMainMenu()) return;
+            try
+            {
+                var details = levelSelectionNavigationController._levelCollectionNavigationController?._levelDetailViewController;
+                if (details != null && details.isActiveAndEnabled && details._contentIsOwnedAndReady)
+                {
+                    DiffultyChangedDecideCustomMap(levelSelectionNavigationController);
+                    ppPredictorMgr.ChangeGameplayModifiers(gameplaySetupViewController);
+                }
+                else
+                {
+                    ppPredictorMgr.DifficultyChanged(null, default);
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.ErrorPrint($"Failed to restore predictor selection after menu activation: {ex.Message}");
+            }
         }
         private void OnLevelSelectionDeactivated(bool removedFromHierarchy, bool screenSystemDisabling)
         {
+            levelSelectionActive = false;
+            ++selectionActivationVersion;
             RefreshButtonInteraction(true);
             this.ppPredictorMgr.ActivateView(false);
         }

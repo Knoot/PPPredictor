@@ -42,7 +42,7 @@ namespace PPPredictor.Utilities
         private bool isRightArrowActive = false;
         private bool isMapPoolDropDownActive = true;
         private bool isLeaderboardNavigationActive = false;
-        private int _loadingCounter = 0;
+        private bool publishedLoadingState;
 
         public event EventHandler<bool> ViewActivated;
         public event EventHandler<bool> OnDataLoading;
@@ -76,13 +76,12 @@ namespace PPPredictor.Utilities
             try { await resetGate.WaitAsync(lifetime.Token); }
             catch (OperationCanceledException) when (disposed) { return; }
             resetting = true;
+            RefreshLoadingState();
             try
             {
                 fullSyncPause.Cancel();
                 RefreshLeaderboardVisibilityByIPAPluginManager();
                 DisposePredictors();
-                _loadingCounter = 0;
-                OnDataLoading?.Invoke(this, false);
                 var previous = CalculatorInstance;
                 previous?.Dispose();
                 await _websocketMgr.CloseScoreWebSockets();
@@ -175,6 +174,7 @@ namespace PPPredictor.Utilities
             finally
             {
                 resetting = false;
+                RefreshLoadingState();
                 resetGate.Release();
                 if (!disposed)
                 {
@@ -354,6 +354,7 @@ namespace PPPredictor.Utilities
 
         private void PPPredictor_OnMapPoolRefreshed(object sender, EventArgs e)
         {
+            RefreshLoadingState();
             OnMapPoolRefreshed?.Invoke(this, null);
         }
 
@@ -375,16 +376,21 @@ namespace PPPredictor.Utilities
 
         private void PPPredictor_OnDataLoading(object sender, bool isDataLoading)
         {
-            _loadingCounter = Math.Max(_loadingCounter + (isDataLoading ? +1 : -1), 0);
-            if ((isDataLoading && _loadingCounter == 1) || (!isDataLoading && !IsDataLoading()))
-            {
-                OnDataLoading?.Invoke(this, isDataLoading);
-            }
+            RefreshLoadingState();
+        }
+
+        private void RefreshLoadingState()
+        {
+            if (disposed) return;
+            bool loading = IsDataLoading();
+            if (loading == publishedLoadingState) return;
+            publishedLoadingState = loading;
+            OnDataLoading?.Invoke(this, loading);
         }
 
         public bool IsDataLoading()
         {
-            return _loadingCounter > 0;
+            return resetting || CurrentPPPredictor.IsCurrentPoolLoading;
         }
         #endregion
 
@@ -400,6 +406,7 @@ namespace PPPredictor.Utilities
 
         private void SetNavigationArrowInteractivity(bool triggerMapPoolRefresh = true)
         {
+            RefreshLoadingState();
             if (_lsPPPredictor.Count() == 1) isLeaderboardNavigationActive = false;
             else isLeaderboardNavigationActive = true;
             isLeftArrowActive = index > 0;

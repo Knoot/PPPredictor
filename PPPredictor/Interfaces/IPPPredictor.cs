@@ -12,6 +12,7 @@ namespace PPPredictor.Interfaces
 {
     interface IPPPredictor : IDisposable
     {
+        bool IsCurrentPoolLoading { get; }
         void ChangeGameplayModifiers(GameplaySetupViewController gameplaySetupViewController);
         void DifficultyChanged(BeatmapLevel selectedBeatmapLevel, BeatmapKey beatmapKey);
         Task UpdateCurrentAndCheckResetSession(bool doResetSession);

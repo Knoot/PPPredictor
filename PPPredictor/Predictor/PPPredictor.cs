@@ -34,10 +34,14 @@ namespace PPPredictor.Utilities
         private DateTime _beatMapInfoLoadingStarted = DateTime.MinValue;
         private int _beatMapInfoRequestVersion = 0;
         private readonly RefreshQueue _refreshQueue = new RefreshQueue();
+        private readonly PoolLoadingState _poolLoading = new PoolLoadingState();
+        public bool IsCurrentPoolLoading => !_disposed && _poolLoading.IsLoading(currentMapPool?.Id);
         private bool _reconnectRefreshRunning, _reconnectRefreshRequested;
         private bool _disposed;
         private readonly System.Threading.SynchronizationContext _uiContext = System.Threading.SynchronizationContext.Current;
         private string _lastUnavailableCalculation;
+        private string _scoreProgressPoolId;
+        private int _scoreProgressVersion, _scoresLoaded, _scoresTotal;
         private DisplayPPInfo _ppDisplay = new DisplayPPInfo();
         private PPGainResult _ppGainResult = new PPGainResult();
         private Timer _rankTimer;
@@ -267,7 +271,7 @@ namespace PPPredictor.Utilities
             string poolId = mapPool.Id;
             currentMapPool.SelectedByLoading = true;
             OnMapPoolRefreshed?.Invoke(this, null);
-            IsDataLoading(true);
+            IsDataLoading(true, poolId);
             try
             {
                 await calculatorInstance.UpdateMapPoolDetails(leaderboardName, poolId);
@@ -276,16 +280,17 @@ namespace PPPredictor.Utilities
             }
             finally
             {
-                IsDataLoading(false);
+                IsDataLoading(false, poolId);
             }
         }
         #endregion
 
         #region event sending
-        private void IsDataLoading(bool isDataLoading)
+        private void IsDataLoading(bool isDataLoading, string poolId)
         {
             if (_disposed) return;
-            OnDataLoading?.Invoke(this, isDataLoading);
+            _poolLoading.SetLoading(poolId, isDataLoading);
+            OnDataLoading?.Invoke(this, IsCurrentPoolLoading);
         }
 
         private void RunOnMainThread(Action action)
@@ -296,13 +301,32 @@ namespace PPPredictor.Utilities
             else action();
         }
 
-        private Action<int, int> ProgressForSelection(string poolId, int requestVersion)
+        private Action<int, int> ProgressForPool(string poolId)
         {
+            int version = ++_scoreProgressVersion;
+            _scoreProgressPoolId = poolId;
+            _scoresLoaded = _scoresTotal = 0;
             return (loaded, total) => RunOnMainThread(() =>
             {
-                if (currentMapPool?.Id == poolId && requestVersion == _beatMapInfoRequestVersion)
+                // Progress belongs to the score request, not the map selected while it runs.
+                if (version != _scoreProgressVersion) return;
+                _scoresLoaded = loaded;
+                _scoresTotal = total;
+                if (currentMapPool?.Id == poolId)
                     SendImproveDataLoadingProgress(loaded, total);
             });
+        }
+
+        private string ScoreProgressText => currentMapPool?.Id == _scoreProgressPoolId && _scoresTotal > 0
+            ? $"{LeaderBoardName}: {_scoresLoaded:N0}/{_scoresTotal:N0}" : null;
+
+        private void ClearScoreProgress()
+        {
+            bool refresh = _scoreProgressPoolId != null && currentMapPool?.Id == _scoreProgressPoolId;
+            ++_scoreProgressVersion;
+            _scoreProgressPoolId = null;
+            _scoresLoaded = _scoresTotal = 0;
+            if (refresh) CalculatePP();
         }
         private void SendDisplayPPInfo(DisplayPPInfo displayPPInfo)
         {
@@ -330,6 +354,12 @@ namespace PPPredictor.Utilities
             {
                 text = "no map selected";
                 isLoading = false;
+            }
+            else if (ScoreProgressText is string progress)
+            {
+                text = progress;
+                isLoading = true;
+                _ppDisplay.ImproveData = progress;
             }
             if (HasImproveData()) OnDisplayImproveInfo?.Invoke(this, new DisplayImproveInfo(LeaderBoardName, text, isLoading));
         }
@@ -456,6 +486,7 @@ namespace PPPredictor.Utilities
                 return string.Empty;
             }
             if (!_hasSelectedBeatMap) return "no map selected";
+            if (ScoreProgressText is string progress) return progress;
             if (!_isBeatMapInfoLoaded)
             {
                 return "loading...";
@@ -526,7 +557,7 @@ namespace PPPredictor.Utilities
 
         private bool IsImproveDataLoadingDisplay(string improveData)
         {
-            return _hasSelectedBeatMap && (!_isBeatMapInfoLoaded || improveData == "loading...");
+            return _hasSelectedBeatMap && (ScoreProgressText != null || !_isBeatMapInfoLoaded || improveData == "loading...");
         }
 
         private double? FindRawPPForWeightedGain(double targetWeightedPP, double maxPP)
@@ -720,7 +751,7 @@ namespace PPPredictor.Utilities
         {
             return _refreshQueue.Enqueue(async () =>
             {
-                IsDataLoading(true);
+                IsDataLoading(true, poolId);
                 try
                 {
                     _refreshQueue.Token.ThrowIfCancellationRequested();
@@ -744,7 +775,7 @@ namespace PPPredictor.Utilities
                     for (int attempt = 0; attempt < attempts; attempt++)
                     {
                         confirmed = await calculatorInstance.GetPlayerScores(leaderboardName, poolId, fetchLength,
-                            _leaderboardInfo.LargePageSize, fetchOnePage, ProgressForSelection(poolId, requestVersion), expectedScore,
+                            _leaderboardInfo.LargePageSize, fetchOnePage, ProgressForPool(poolId), expectedScore,
                             allowFullRefresh: false);
                         _refreshQueue.Token.ThrowIfCancellationRequested();
                         if (refreshProfile) await DisplaySession(resetSession, poolId);
@@ -761,15 +792,16 @@ namespace PPPredictor.Utilities
                         Plugin.ErrorPrint($"{LeaderBoardName} score was not confirmed by API after {attempts} attempts: pool={poolId}; map={expectedScore.hash}; expectedPP={expectedScore.pp}");
                     if (currentMapPool.Id == poolId) CalculatePP();
                 }
-                finally { IsDataLoading(false); }
+                finally { IsDataLoading(false, poolId); ClearScoreProgress(); }
             });
         }
 
         public async Task UpdateCurrentAndCheckResetSession(bool doResetSession)
         {
-            IsDataLoading(true);
-            try { await DisplaySession(doResetSession); }
-            finally { IsDataLoading(false); }
+            string poolId = currentMapPool.Id;
+            IsDataLoading(true, poolId);
+            try { await DisplaySession(doResetSession, poolId); }
+            finally { IsDataLoading(false, poolId); }
         }
 
         public Task RunFullScoreSync(string poolId, System.Threading.CancellationToken cancellation)
@@ -777,17 +809,16 @@ namespace PPPredictor.Utilities
             return _refreshQueue.Enqueue(async () =>
             {
                 cancellation.ThrowIfCancellationRequested();
-                IsDataLoading(true);
+                IsDataLoading(true, poolId);
                 try
                 {
-                    int version = _beatMapInfoRequestVersion;
                     Plugin.DebugPrint($"Full score sync: {LeaderBoardName}/{poolId}");
-                    await calculatorInstance.SynchronizeScores(leaderboardName, poolId, cancellation, ProgressForSelection(poolId, version));
+                    await calculatorInstance.SynchronizeScores(leaderboardName, poolId, cancellation, ProgressForPool(poolId));
                     cancellation.ThrowIfCancellationRequested();
                     await DisplaySession(false, poolId, false);
                     if (currentMapPool.Id == poolId) CalculatePP();
                 }
-                finally { IsDataLoading(false); }
+                finally { IsDataLoading(false, poolId); ClearScoreProgress(); }
             });
         }
 
@@ -839,11 +870,11 @@ namespace PPPredictor.Utilities
             if (currentMapPool != null)
             {
                 string poolId = currentMapPool.Id;
-                IsDataLoading(true);
+                IsDataLoading(true, poolId);
                 try { await calculatorInstance.UpdateMapPoolDetails(leaderboardName, poolId); }
                 catch (OperationCanceledException) when (_disposed) { }
                 catch (Exception ex) { Plugin.ErrorPrint($"{LeaderBoardName} pool refresh failed: {ex.Message}"); }
-                finally { IsDataLoading(false); }
+                finally { IsDataLoading(false, poolId); }
             }
         }
 

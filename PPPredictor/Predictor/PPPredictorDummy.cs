@@ -10,6 +10,7 @@ namespace PPPredictor.Utilities
 {
     internal class PPPredictorDummy : IPPPredictor
     {
+        public bool IsCurrentPoolLoading => false;
         public void RefreshAfterReconnect() { }
         public void RefreshImproveData() { }
         public Task RunFullScoreSync(string poolId, System.Threading.CancellationToken cancellation) => Task.CompletedTask;
