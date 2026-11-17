@@ -587,7 +587,7 @@ namespace PPPredictor.Utilities
             _rankGainRunning = true;
             try
             {
-                var rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, poolId, _ppGainResult.PpTotal);
+                var rankGain = await calculatorInstance.GetPlayerRankGain(leaderboardName, poolId, _ppGainResult);
                 if (_hasSelectedBeatMap && version == _predictionVersion && currentMapPool.Id == poolId)
                     DisplayRankGain(rankGain, display);
             }
@@ -619,6 +619,16 @@ namespace PPPredictor.Utilities
                     ppDisplay.PredictedRankDiff = rankGainResult.RankGainGlobal.ToString("+#;-#;0");
                     ppDisplay.PredictedCountryRank = $"{rankGainResult.RankCountry:N0}";
                     ppDisplay.PredictedCountryRankDiff = rankGainResult.RankGainCountry.ToString("+#;-#;0");
+                }
+                if (!rankGainResult.HasGlobalRank)
+                {
+                    ppDisplay.PredictedRank = "...";
+                    ppDisplay.PredictedRankDiff = "?";
+                }
+                if (!rankGainResult.HasCountryRank)
+                {
+                    ppDisplay.PredictedCountryRank = "...";
+                    ppDisplay.PredictedCountryRankDiff = "?";
                 }
             }
             else
